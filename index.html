@@ -95,7 +95,7 @@
   .create-area{
     background:#fff;
     border-bottom:1px solid var(--line);
-    padding:14px 24px 12px;
+    padding:10px 24px;
   }
 
   .create-card{
@@ -103,20 +103,20 @@
     background:var(--panel-soft);
     border:1px solid var(--line);
     border-radius:var(--radius);
-    padding:14px 16px;
+    padding:10px 14px;
   }
 
   .create-head{
     display:flex;
     align-items:center;
     gap:10px;
-    margin-bottom:10px;
+    margin-bottom:7px;
   }
 
   .create-title{
     margin:0;
     color:#17395f;
-    font-size:17px;
+    font-size:16px;
     font-weight:800;
   }
 
@@ -133,23 +133,23 @@
 
   .create-row-1{
     display:grid;
-    grid-template-columns:minmax(320px,1fr) 180px 165px 115px;
-    gap:10px;
+    grid-template-columns:minmax(300px,2fr) 150px 155px 105px;
+    gap:8px;
     align-items:end;
   }
 
   .create-row-2{
     display:grid;
-    grid-template-columns:minmax(320px,1fr) auto;
-    gap:12px;
+    grid-template-columns:minmax(360px,1fr) auto;
+    gap:10px;
     align-items:end;
-    margin-top:9px;
+    margin-top:7px;
   }
 
   .field{min-width:0}
   .label{
     display:block;
-    margin:0 0 5px 2px;
+    margin:0 0 4px 2px;
     color:var(--muted);
     font-size:11px;
     font-weight:700;
@@ -158,22 +158,22 @@
   .control{
     display:block;
     width:100%;
-    height:40px;
+    height:36px;
     border:1px solid #d4d8dd;
-    border-radius:9px;
+    border-radius:8px;
     background:#fff;
     color:var(--text);
-    padding:0 11px;
+    padding:0 10px;
     outline:none;
   }
 
   textarea.control{
-    height:58px;
-    min-height:58px;
-    max-height:100px;
-    padding:9px 11px;
+    height:40px;
+    min-height:40px;
+    max-height:72px;
+    padding:8px 10px;
     resize:vertical;
-    line-height:1.45;
+    line-height:1.35;
   }
 
   .control:focus{
@@ -183,20 +183,22 @@
 
   .save-buttons{
     display:flex;
-    gap:7px;
+    gap:6px;
     flex-wrap:wrap;
     justify-content:flex-end;
     align-items:center;
+    align-self:end;
   }
 
   .btn{
     border:1px solid #d7dbe0;
-    border-radius:9px;
+    border-radius:8px;
     background:#fff;
     color:#333;
-    padding:8px 12px;
+    padding:7px 10px;
     cursor:pointer;
     white-space:nowrap;
+    font-size:13px;
   }
 
   .btn:hover{background:#f3f5f7}
@@ -215,7 +217,7 @@
   .recurring-area{
     background:#fff;
     border-bottom:1px solid var(--line);
-    padding:14px 24px;
+    padding:10px 24px 12px;
   }
 
   .recurring-grid{
@@ -229,18 +231,18 @@
     background:var(--panel-soft);
     border:1px solid var(--line);
     border-radius:var(--radius);
-    padding:12px;
-    min-height:185px;
-    max-height:300px;
+    padding:10px;
+    min-height:155px;
+    max-height:250px;
     overflow:auto;
   }
 
   .recurring-head{
     position:sticky;
-    top:-12px;
+    top:-10px;
     z-index:3;
-    margin:-12px -12px 10px;
-    padding:12px 12px 8px;
+    margin:-10px -10px 8px;
+    padding:10px 10px 6px;
     background:var(--panel-soft);
     display:flex;
     align-items:center;
