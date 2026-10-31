@@ -95,7 +95,7 @@
   .create-area{
     background:#fff;
     border-bottom:1px solid var(--line);
-    padding:10px 24px;
+    padding:7px 24px 8px;
   }
 
   .create-card{
@@ -103,14 +103,23 @@
     background:var(--panel-soft);
     border:1px solid var(--line);
     border-radius:var(--radius);
-    padding:10px 14px;
+    padding:8px 12px;
   }
 
   .create-head{
     display:flex;
     align-items:center;
     gap:10px;
-    margin-bottom:7px;
+    margin-bottom:0;
+    min-height:0;
+  }
+
+  .create-head:has(.edit-badge[hidden]){
+    display:none;
+  }
+
+  .create-head:not(:has(.edit-badge[hidden])){
+    margin-bottom:6px;
   }
 
   .create-title{
@@ -143,7 +152,7 @@
     grid-template-columns:minmax(360px,1fr) auto;
     gap:10px;
     align-items:end;
-    margin-top:7px;
+    margin-top:6px;
   }
 
   .field{min-width:0}
@@ -488,8 +497,7 @@
 
     <section class="create-area">
       <div class="create-card">
-        <div class="create-head">
-          <h2 class="create-title">＋ タスクを追加</h2>
+        <div class="create-head compact-head">
           <span id="editBadge" class="edit-badge" hidden>編集中</span>
         </div>
 
