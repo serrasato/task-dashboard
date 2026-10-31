@@ -9,78 +9,467 @@
     --bg:#f6f7f8;
     --panel:#ffffff;
     --panel-soft:#fafafa;
-    --line:#e6e8eb;
+    --line:#e4e7eb;
     --text:#202124;
     --muted:#6f7680;
     --accent:#2f6fbe;
-    --danger:#c0392b;
-    --radius:16px;
+    --accent-soft:#eaf2fb;
+    --warn:#d97706;
+    --radius:14px;
   }
+
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Yu Gothic","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:Arial,"Yu Gothic","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+  }
   button,input,select,textarea{font:inherit}
+
   .app{min-height:100vh;display:flex}
-  .sidebar{width:220px;flex:0 0 220px;background:#eef0f2;border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh}
-  .brand{margin:0 10px 18px;font-size:22px;font-weight:800}
+
+  .sidebar{
+    width:194px;
+    flex:0 0 194px;
+    background:#eef0f2;
+    border-right:1px solid var(--line);
+    padding:22px 14px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+
+  .brand{
+    margin:0 0 18px;
+    font-size:22px;
+    font-weight:800;
+  }
+
   .nav{display:flex;flex-direction:column;gap:6px}
-  .nav button{border:0;background:transparent;color:#333;text-align:left;padding:12px 13px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .nav button.active{background:#dfe7f2;font-weight:700;color:#17395f}
-  .main{flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
-  .header{height:68px;background:var(--panel);border-bottom:1px solid var(--line);padding:0 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-  .header h1{margin:0;font-size:22px;color:#17395f}
-  .top-area{height:35vh;min-height:280px;max-height:420px;padding:16px 24px;background:var(--panel);border-bottom:1px solid var(--line)}
-  .top-grid{height:100%;display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .card{min-width:0;height:100%;background:var(--panel-soft);border:1px solid var(--line);border-radius:var(--radius);padding:16px;overflow:auto}
-  .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-  .section-title{margin:0;font-size:18px;font-weight:800;color:#17395f}
-  .edit-badge{display:inline-flex;align-items:center;border-radius:999px;background:#fff3d9;color:#8d5c00;padding:4px 9px;font-size:12px;font-weight:700}
-  .form-grid{display:grid;grid-template-columns:minmax(0,1fr) 150px 160px 110px;gap:10px}
-  .field.name-field{grid-column:1/-1}
-  .label{display:block;margin:0 0 6px 2px;color:var(--muted);font-size:12px;font-weight:700}
-  .control{width:100%;height:42px;border:1px solid #d4d8dd;border-radius:10px;background:#fff;color:var(--text);padding:0 11px;outline:none}
-  .control:focus,textarea.control:focus{border-color:#7da3d1;box-shadow:0 0 0 3px rgba(47,111,190,.12)}
-  textarea.control{height:62px;padding:10px 11px;resize:vertical;min-height:62px;max-height:110px}
-  .memo-field{margin-top:10px}
-  .form-actions{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-  .daily-toggle{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 11px;border:1px solid #d9dde2;border-radius:10px;background:#fff;cursor:pointer;user-select:none}
-  .daily-toggle input{width:17px;height:17px}
-  .actions{display:flex;gap:8px;margin-left:auto}
-  .btn{border:1px solid #d8dce1;border-radius:10px;background:#fff;color:#333;padding:9px 14px;cursor:pointer}
-  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;padding-inline:22px}
-  .btn.warn{background:#d97706;border-color:#d97706;color:#fff}
-  .btn.small{padding:7px 10px;font-size:12px}
-  .daily-head{position:sticky;top:-16px;z-index:2;margin:-16px -16px 10px;padding:16px 16px 10px;background:var(--panel-soft);display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .daily-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-content:start}
-  .daily-empty{grid-column:1/-1;margin:12px 0;color:var(--muted)}
-  .toolbar{background:#fff;border-bottom:1px solid var(--line);padding:11px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .nav button{
+    border:0;
+    background:transparent;
+    color:#333;
+    text-align:left;
+    padding:12px 13px;
+    border-radius:10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .nav button.active{
+    background:#dfe7f2;
+    font-weight:700;
+    color:#17395f;
+  }
+
+  .main{
+    flex:1;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+
+  .header{
+    height:68px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:0 28px;
+    display:flex;
+    align-items:center;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .header h1{
+    margin:0;
+    font-size:22px;
+    color:#17395f;
+  }
+
+  /* タスク追加：横幅いっぱい・3行以内 */
+  .create-area{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:14px 24px 12px;
+  }
+
+  .create-card{
+    width:100%;
+    background:var(--panel-soft);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+  }
+
+  .create-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+
+  .create-title{
+    margin:0;
+    color:#17395f;
+    font-size:17px;
+    font-weight:800;
+  }
+
+  .edit-badge{
+    display:inline-flex;
+    align-items:center;
+    border-radius:999px;
+    background:#fff3d9;
+    color:#8d5c00;
+    padding:4px 9px;
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .create-row-1{
+    display:grid;
+    grid-template-columns:minmax(320px,1fr) 180px 165px 115px;
+    gap:10px;
+    align-items:end;
+  }
+
+  .create-row-2{
+    display:grid;
+    grid-template-columns:minmax(320px,1fr) auto;
+    gap:12px;
+    align-items:end;
+    margin-top:9px;
+  }
+
+  .field{min-width:0}
+  .label{
+    display:block;
+    margin:0 0 5px 2px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .control{
+    display:block;
+    width:100%;
+    height:40px;
+    border:1px solid #d4d8dd;
+    border-radius:9px;
+    background:#fff;
+    color:var(--text);
+    padding:0 11px;
+    outline:none;
+  }
+
+  textarea.control{
+    height:58px;
+    min-height:58px;
+    max-height:100px;
+    padding:9px 11px;
+    resize:vertical;
+    line-height:1.45;
+  }
+
+  .control:focus{
+    border-color:#7da3d1;
+    box-shadow:0 0 0 3px rgba(47,111,190,.12);
+  }
+
+  .save-buttons{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+    align-items:center;
+  }
+
+  .btn{
+    border:1px solid #d7dbe0;
+    border-radius:9px;
+    background:#fff;
+    color:#333;
+    padding:8px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  .btn:hover{background:#f3f5f7}
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:700;
+  }
+  .btn.daily{color:#7b6500;border-color:#e5d79b;background:#fffdf3}
+  .btn.weekly{color:#285c92;border-color:#b8d0e7;background:#f6fbff}
+  .btn.monthly{color:#7350a0;border-color:#d2c2e4;background:#fbf8ff}
+  .btn.cancel{color:#666}
+
+  /* 反復タスク3ブロック */
+  .recurring-area{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:14px 24px;
+  }
+
+  .recurring-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+  }
+
+  .recurring-card{
+    min-width:0;
+    background:var(--panel-soft);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px;
+    min-height:185px;
+    max-height:300px;
+    overflow:auto;
+  }
+
+  .recurring-head{
+    position:sticky;
+    top:-12px;
+    z-index:3;
+    margin:-12px -12px 10px;
+    padding:12px 12px 8px;
+    background:var(--panel-soft);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .recurring-title{
+    margin:0;
+    font-size:15px;
+    color:#17395f;
+    font-weight:800;
+  }
+
+  .reset-btn{
+    border:1px solid #d6dce3;
+    border-radius:8px;
+    background:#fff;
+    color:#4d5d6d;
+    padding:6px 8px;
+    cursor:pointer;
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  /* 各ブロック内は3列。4件目は2行目へ */
+  .mini-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+    align-content:start;
+  }
+
+  .toolbar{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:10px 24px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+  }
   .toolbar label{color:#555;font-size:14px}
-  .toolbar select{margin-left:6px;padding:7px 30px 7px 10px;border:1px solid #d8dce1;border-radius:9px;background:#fff}
-  .content{flex:1;padding:18px 24px 40px}
-  .list-title{color:#17395f;margin:0 0 14px}
-  .task-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px}
-  .task-check{width:20px;height:20px;margin:16px 0 0 2px;flex:0 0 auto;cursor:pointer}
-  details.task{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.02)}
-  summary.task-summary{list-style:none;cursor:pointer;padding:14px;display:flex;align-items:center;gap:10px;min-width:0}
+  .toolbar select{
+    margin-left:6px;
+    padding:7px 30px 7px 10px;
+    border:1px solid #d8dce1;
+    border-radius:9px;
+    background:#fff;
+  }
+
+  .content{
+    flex:1;
+    padding:18px 24px 40px;
+  }
+
+  .list-title{
+    color:#17395f;
+    margin:0 0 14px;
+  }
+
+  .task-row{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    margin-bottom:10px;
+  }
+
+  .task-check{
+    width:20px;
+    height:20px;
+    margin:15px 0 0 2px;
+    flex:0 0 auto;
+    cursor:pointer;
+  }
+
+  details.task{
+    flex:1;
+    min-width:0;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:11px;
+    overflow:hidden;
+  }
+
+  summary.task-summary{
+    list-style:none;
+    cursor:pointer;
+    padding:13px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+  }
   summary.task-summary::-webkit-details-marker{display:none}
-  .arrow{width:18px;color:#777;flex:0 0 auto}
+
+  .arrow{width:16px;color:#777;flex:0 0 auto}
   details[open] .arrow{transform:rotate(90deg)}
+
   .task-main{min-width:0;flex:1}
-  .task-name{display:block;font-size:16px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .task-name.done{color:#999;text-decoration:line-through}
-  .task-meta{margin-top:5px;font-size:12px;color:#68707a;line-height:1.5;white-space:normal}
-  .task-body{border-top:1px solid var(--line);padding:12px 14px}
-  .memo{white-space:pre-wrap;line-height:1.65;font-size:14px;margin-bottom:12px}
+  .task-name{
+    display:block;
+    font-size:16px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .task-name.done{
+    color:#999;
+    text-decoration:line-through;
+  }
+
+  .task-meta{
+    margin-top:5px;
+    font-size:12px;
+    color:#68707a;
+    line-height:1.45;
+  }
+
+  .task-body{
+    border-top:1px solid var(--line);
+    padding:11px 13px;
+  }
+
+  .memo{
+    white-space:pre-wrap;
+    line-height:1.6;
+    font-size:14px;
+    margin-bottom:10px;
+  }
   .memo.empty{color:#aaa}
-  .task-buttons{display:flex;gap:8px;flex-wrap:wrap}
-  .daily-grid .task-row{gap:6px;margin:0}
-  .daily-grid .task-check{width:18px;height:18px;margin-top:13px}
-  .daily-grid summary.task-summary{padding:10px 9px;gap:6px}
-  .daily-grid .task-name{font-size:13px}
-  .daily-grid .task-meta{font-size:10px;margin-top:4px;line-height:1.35}
-  .daily-grid .task-body{padding:9px;font-size:12px}
-  .empty-state{color:#999;padding:40px 10px;text-align:center}
-  @media (max-width:1100px){.form-grid{grid-template-columns:1fr 1fr}.field.name-field{grid-column:1/-1}.top-area{height:auto;max-height:none}.top-grid{grid-template-columns:1fr}.card{height:auto;max-height:420px}.daily-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-  @media (max-width:760px){.sidebar{width:72px;flex-basis:72px;padding:16px 8px}.brand{font-size:0;text-align:center;margin:0 0 14px}.brand::after{content:"📋";font-size:24px}.nav button{justify-content:center;padding:12px 8px}.nav button .label-text{display:none}.nav button .count{display:none}.top-area,.toolbar,.content{padding-left:12px;padding-right:12px}.header{padding-inline:14px}.form-grid{grid-template-columns:1fr}.field.name-field{grid-column:auto}.daily-grid{grid-template-columns:1fr}}
+
+  .task-buttons{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+  }
+
+  /* 反復タスク用コンパクトカード */
+  .mini-grid .task-row{
+    gap:5px;
+    margin:0;
+    min-width:0;
+  }
+
+  .mini-grid .task-check{
+    width:17px;
+    height:17px;
+    margin-top:11px;
+  }
+
+  .mini-grid details.task{
+    border-radius:8px;
+  }
+
+  .mini-grid summary.task-summary{
+    padding:9px 7px;
+    gap:4px;
+  }
+
+  .mini-grid .arrow{width:12px;font-size:10px}
+  .mini-grid .task-name{font-size:12px}
+  .mini-grid .task-meta{
+    font-size:9px;
+    margin-top:3px;
+    line-height:1.35;
+  }
+  .mini-grid .task-body{
+    padding:8px;
+    font-size:11px;
+  }
+  .mini-grid .memo{
+    font-size:11px;
+    margin-bottom:7px;
+  }
+  .mini-grid .btn{
+    padding:5px 7px;
+    font-size:10px;
+  }
+
+  .empty{
+    grid-column:1/-1;
+    color:#999;
+    padding:18px 6px;
+    font-size:12px;
+  }
+
+  @media (max-width:1200px){
+    .create-row-1{
+      grid-template-columns:minmax(240px,1fr) 150px 150px 105px;
+    }
+    .create-row-2{
+      grid-template-columns:1fr;
+    }
+    .save-buttons{
+      justify-content:flex-start;
+    }
+    .mini-grid{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+
+  @media (max-width:900px){
+    .sidebar{width:160px;flex-basis:160px}
+    .recurring-grid{grid-template-columns:1fr}
+    .recurring-card{max-height:280px}
+    .mini-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  }
+
+  @media (max-width:700px){
+    .sidebar{
+      width:70px;
+      flex-basis:70px;
+      padding:16px 8px;
+    }
+    .brand{
+      font-size:0;
+      text-align:center;
+    }
+    .brand::after{content:"📋";font-size:24px}
+    .nav button .nav-label,.nav button .nav-count{display:none}
+    .nav button{justify-content:center}
+    .header{padding-inline:14px}
+    .create-area,.recurring-area,.toolbar,.content{padding-left:12px;padding-right:12px}
+    .create-row-1{grid-template-columns:1fr 1fr}
+    .create-row-1 .name-field{grid-column:1/-1}
+    .mini-grid{grid-template-columns:1fr}
+  }
 </style>
 </head>
 <body>
@@ -89,71 +478,542 @@
     <div class="brand">📋 Tasks</div>
     <nav class="nav" id="nav"></nav>
   </aside>
+
   <main class="main">
-    <header class="header"><h1 id="heading">すべて</h1></header>
-    <section class="top-area">
-      <div class="top-grid">
-        <section class="card">
-          <div class="section-head"><h2 class="section-title">＋ タスクを追加</h2><span id="editBadge" class="edit-badge" hidden>編集中</span></div>
-          <div class="form-grid">
-            <div class="field name-field"><label class="label" for="name">タスク名</label><input id="name" class="control" placeholder="例：月報を提出する" /></div>
-            <div class="field"><label class="label" for="genre">ジャンル</label><select id="genre" class="control"><option>仕事</option><option>MTG</option><option>スキルアップ</option><option>私用</option></select></div>
-            <div class="field"><label class="label" for="date">期限</label><input id="date" class="control" type="date" /></div>
-            <div class="field"><label class="label" for="priority">重要度</label><select id="priority" class="control"><option>高</option><option selected>中</option><option>低</option></select></div>
+    <header class="header">
+      <h1 id="heading">📥 すべて</h1>
+    </header>
+
+    <section class="create-area">
+      <div class="create-card">
+        <div class="create-head">
+          <h2 class="create-title">＋ タスクを追加</h2>
+          <span id="editBadge" class="edit-badge" hidden>編集中</span>
+        </div>
+
+        <div class="create-row-1">
+          <div class="field name-field">
+            <label class="label" for="name">タスク名</label>
+            <input id="name" class="control" placeholder="例：月報を提出する">
           </div>
-          <div class="memo-field"><label class="label" for="memo">説明・メモ <span style="font-weight:400;color:#999">（任意）</span></label><textarea id="memo" class="control" placeholder="補足、やることの詳細、URLなど"></textarea></div>
-          <div class="form-actions">
-            <label class="daily-toggle"><input type="checkbox" id="daily" /><span>デイリータスクとして登録</span></label>
-            <div class="actions"><button id="cancel" class="btn" hidden>キャンセル</button><button id="save" class="btn primary">追加</button></div>
+
+          <div class="field">
+            <label class="label" for="genre">ジャンル</label>
+            <select id="genre" class="control">
+              <option>仕事</option>
+              <option>MTG</option>
+              <option>スキルアップ</option>
+              <option>私用</option>
+            </select>
           </div>
+
+          <div class="field">
+            <label class="label" for="date">期限</label>
+            <input id="date" class="control" type="date">
+          </div>
+
+          <div class="field">
+            <label class="label" for="priority">重要度</label>
+            <select id="priority" class="control">
+              <option>高</option>
+              <option selected>中</option>
+              <option>低</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="create-row-2">
+          <div class="field">
+            <label class="label" for="memo">説明・メモ（任意）</label>
+            <textarea id="memo" class="control" placeholder="補足、やることの詳細、URLなど"></textarea>
+          </div>
+
+          <div class="save-buttons">
+            <button class="btn primary" data-save-type="none">通常タスクに追加</button>
+            <button class="btn daily" data-save-type="daily">☀️ デイリーに追加</button>
+            <button class="btn weekly" data-save-type="weekly">📅 ウィークリーに追加</button>
+            <button class="btn monthly" data-save-type="monthly">🗓️ マンスリーに追加</button>
+            <button id="cancel" class="btn cancel" hidden>キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="recurring-area">
+      <div class="recurring-grid">
+        <section class="recurring-card">
+          <div class="recurring-head">
+            <h2 id="dailyTitle" class="recurring-title">デイリータスク (0/0 完了)</h2>
+            <button id="resetDaily" class="reset-btn">↺ 全部未完了</button>
+          </div>
+          <div id="dailyArea" class="mini-grid"></div>
         </section>
-        <section class="card">
-          <div class="daily-head"><h2 id="dailyTitle" class="section-title">デイリータスク (0/0 完了)</h2><button id="resetDaily" class="btn small">↺ 全部未完了</button></div>
-          <div id="dailyArea" class="daily-grid"></div>
+
+        <section class="recurring-card">
+          <div class="recurring-head">
+            <h2 id="weeklyTitle" class="recurring-title">ウィークリータスク (0/0 完了)</h2>
+            <button id="resetWeekly" class="reset-btn">↺ 全部未完了</button>
+          </div>
+          <div id="weeklyArea" class="mini-grid"></div>
+        </section>
+
+        <section class="recurring-card">
+          <div class="recurring-head">
+            <h2 id="monthlyTitle" class="recurring-title">マンスリータスク (0/0 完了)</h2>
+            <button id="resetMonthly" class="reset-btn">↺ 全部未完了</button>
+          </div>
+          <div id="monthlyArea" class="mini-grid"></div>
         </section>
       </div>
     </section>
+
     <section class="toolbar">
-      <label>並び替え<select id="sort"><option value="priority">重要度順</option><option value="date">期限順</option></select></label>
-      <label style="display:inline-flex;align-items:center;gap:7px"><input type="checkbox" id="showDone" />完了も表示</label>
+      <label>
+        並び替え
+        <select id="sort">
+          <option value="priority">重要度順</option>
+          <option value="date">期限順</option>
+        </select>
+      </label>
+
+      <label style="display:inline-flex;align-items:center;gap:7px">
+        <input type="checkbox" id="showDone">
+        完了も表示
+      </label>
     </section>
-    <section class="content"><h2 class="list-title" id="listTitle">すべて</h2><div id="items"></div></section>
+
+    <section class="content">
+      <h2 class="list-title" id="listTitle">📥 すべて</h2>
+      <div id="items"></div>
+    </section>
   </main>
 </div>
+
 <script>
 (() => {
   const STORAGE_KEY = "simple_tasks_v2";
+
   let tasks = [];
-  try { tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("simple_tasks_v1") || "[]"); } catch (e) { tasks = []; }
+  try {
+    tasks = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ||
+      localStorage.getItem("simple_tasks_v1") ||
+      "[]"
+    );
+  } catch (e) {
+    tasks = [];
+  }
+
   if (!Array.isArray(tasks)) tasks = [];
-  tasks = tasks.map(task => ({...task, g:task.g||"未分類", m:task.m||"", daily:!!task.daily}));
-  let selectedGenre="all", sortMode="priority", showDone=false, editingId=null;
-  const genres={all:"📥 すべて",仕事:"💼 仕事",MTG:"🃏 MTG",スキルアップ:"📚 スキルアップ",私用:"🏠 私用"};
-  const priorityRank={高:0,中:1,低:2};
-  const el=id=>document.getElementById(id);
-  const today=()=>new Date().toLocaleDateString("sv-SE");
-  const saveTasks=()=>localStorage.setItem(STORAGE_KEY,JSON.stringify(tasks));
-  const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
-  const effectiveDone=task=>task.daily?task.lastDone===today():!!task.done;
-  const compareTasks=(a,b)=>{const p=(priorityRank[a.p]??9)-(priorityRank[b.p]??9),d=(a.d||"9999-12-31").localeCompare(b.d||"9999-12-31");return sortMode==="priority"?p||d:d||p};
-  const resetForm=()=>{editingId=null;el("name").value="";el("genre").value="仕事";el("date").value="";el("priority").value="中";el("memo").value="";el("daily").checked=false;el("save").textContent="追加";el("save").classList.remove("warn");el("save").classList.add("primary");el("cancel").hidden=true;el("editBadge").hidden=true};
-  const startEdit=task=>{editingId=task.id;el("name").value=task.n||"";el("genre").value=genres[task.g]?task.g:"仕事";el("date").value=task.d||"";el("priority").value=task.p||"中";el("memo").value=task.m||"";el("daily").checked=!!task.daily;el("save").textContent="更新";el("save").classList.remove("primary");el("save").classList.add("warn");el("cancel").hidden=false;el("editBadge").hidden=false;el("name").focus();el("name").select()};
-  const taskCard=(task,compact=false)=>{const isDone=effectiveDone(task),icon=task.p==="高"?"🔴":task.p==="中"?"🟡":"🟢",overdue=!task.daily&&!isDone&&task.d&&task.d<today();const meta=compact?`${icon} ${escapeHtml(task.p)} ${task.m?"📝":""}`:`${escapeHtml(task.g)}　${icon} ${escapeHtml(task.p)}　${task.d?"📅 "+escapeHtml(task.d):""} ${task.m?"📝":""} ${task.daily?"☀️":""} ${overdue?"🚨期限切れ":""}`;return `<div class="task-row"><input class="task-check" type="checkbox" data-complete="${task.id}" title="完了" ${isDone?"checked":""}/><details class="task"><summary class="task-summary"><span class="arrow">▶</span><div class="task-main"><span class="task-name ${isDone?"done":""}">${escapeHtml(task.n)}</span><div class="task-meta">${meta}</div></div></summary><div class="task-body"><div class="memo ${task.m?"":"empty"}">${task.m?escapeHtml(task.m):"メモなし"}</div><div class="task-buttons"><button class="btn small" data-edit="${task.id}">✏️ 編集</button><button class="btn small" data-delete="${task.id}">🗑️ 削除</button></div></div></details></div>`};
-  const bindTaskEvents=()=>{
-    document.querySelectorAll("[data-complete]").forEach(input=>input.addEventListener("change",()=>{const task=tasks.find(item=>String(item.id)===input.dataset.complete);if(!task)return;if(task.daily)task.lastDone=input.checked?today():"";else task.done=input.checked;saveTasks();render()}));
-    document.querySelectorAll("[data-edit]").forEach(button=>button.addEventListener("click",e=>{e.preventDefault();const task=tasks.find(item=>String(item.id)===button.dataset.edit);if(task)startEdit(task)}));
-    document.querySelectorAll("[data-delete]").forEach(button=>button.addEventListener("click",e=>{e.preventDefault();const id=button.dataset.delete;if(!confirm("このタスクを削除しますか？"))return;tasks=tasks.filter(item=>String(item.id)!==id);if(String(editingId)===id)resetForm();saveTasks();render()}));
+
+  // 旧データを新仕様に自動移行
+  tasks = tasks.map(task => ({
+    ...task,
+    g: task.g || "未分類",
+    m: task.m || "",
+    repeat: task.repeat || (task.daily ? "daily" : "none"),
+    daily: undefined
+  }));
+
+  let selectedGenre = "all";
+  let sortMode = "priority";
+  let showDone = false;
+  let editingId = null;
+
+  const genres = {
+    all: "📥 すべて",
+    仕事: "💼 仕事",
+    MTG: "🃏 MTG",
+    スキルアップ: "📚 スキルアップ",
+    私用: "🏠 私用"
   };
-  const renderNav=()=>{const nav=el("nav"),incomplete=tasks.filter(task=>!task.daily&&!effectiveDone(task));nav.innerHTML=Object.entries(genres).map(([key,label])=>{const count=key==="all"?incomplete.length:incomplete.filter(task=>task.g===key).length;const icon=label.split(" ")[0];const text=label.substring(icon.length+1);return `<button type="button" data-genre="${key}" class="${selectedGenre===key?"active":""}"><span class="label-text">${label}</span><span class="count">${count||""}</span></button>`}).join("");nav.querySelectorAll("[data-genre]").forEach(button=>button.addEventListener("click",()=>{selectedGenre=button.dataset.genre;render()}))};
-  const renderDaily=()=>{const dailyTasks=tasks.filter(task=>task.daily).sort(compareTasks),completed=dailyTasks.filter(task=>effectiveDone(task)).length;el("dailyTitle").textContent=`デイリータスク (${completed}/${dailyTasks.length} 完了)`;el("dailyArea").innerHTML=dailyTasks.length?dailyTasks.map(task=>taskCard(task,true)).join(""):`<p class="daily-empty">デイリータスクはまだありません</p>`};
-  const renderNormalTasks=()=>{let visible=tasks.filter(task=>!task.daily&&(selectedGenre==="all"||task.g===selectedGenre)&&(showDone||!effectiveDone(task))).sort(compareTasks);el("heading").textContent=genres[selectedGenre];el("listTitle").textContent=genres[selectedGenre];el("items").innerHTML=visible.length?visible.map(task=>taskCard(task,false)).join(""):`<div class="empty-state">タスクなし</div>`};
-  const render=()=>{renderNav();renderDaily();renderNormalTasks();bindTaskEvents()};
-  el("save").addEventListener("click",()=>{const name=el("name").value.trim();if(!name){el("name").focus();return}let task=editingId===null?null:tasks.find(item=>String(item.id)===String(editingId));if(!task){task={id:Date.now()+"-"+Math.random().toString(36).slice(2),done:false,lastDone:""};tasks.push(task)}Object.assign(task,{n:name,g:el("genre").value,d:el("date").value,p:el("priority").value,m:el("memo").value.trim(),daily:el("daily").checked});saveTasks();resetForm();render();el("name").focus()});
-  el("cancel").addEventListener("click",resetForm);
-  el("name").addEventListener("keydown",e=>{if(e.key==="Enter")el("save").click();if(e.key==="Escape"&&editingId!==null)resetForm()});
-  el("sort").addEventListener("change",e=>{sortMode=e.target.value;render()});
-  el("showDone").addEventListener("change",e=>{showDone=e.target.checked;render()});
-  el("resetDaily").addEventListener("click",()=>{tasks.forEach(task=>{if(task.daily)task.lastDone=""});saveTasks();render()});
+
+  const repeatLabels = {
+    none: "通常",
+    daily: "デイリー",
+    weekly: "ウィークリー",
+    monthly: "マンスリー"
+  };
+
+  const priorityRank = { 高: 0, 中: 1, 低: 2 };
+  const el = id => document.getElementById(id);
+
+  const today = () => new Date().toLocaleDateString("sv-SE");
+
+  const weekKey = () => {
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return "W:" + d.toLocaleDateString("sv-SE");
+  };
+
+  const monthKey = () => {
+    const d = new Date();
+    return "M:" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+  };
+
+  const periodKey = repeat => {
+    if (repeat === "daily") return today(); // 旧デイリーのlastDone互換
+    if (repeat === "weekly") return weekKey();
+    if (repeat === "monthly") return monthKey();
+    return "";
+  };
+
+  const saveTasks = () => {
+    const cleaned = tasks.map(({daily, ...task}) => task);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+  };
+
+  const escapeHtml = value =>
+    String(value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+
+  const effectiveDone = task => {
+    if (task.repeat && task.repeat !== "none") {
+      return task.lastDone === periodKey(task.repeat);
+    }
+    return !!task.done;
+  };
+
+  const compareTasks = (a, b) => {
+    const priorityDiff =
+      (priorityRank[a.p] ?? 9) - (priorityRank[b.p] ?? 9);
+
+    const dateDiff =
+      (a.d || "9999-12-31").localeCompare(b.d || "9999-12-31");
+
+    return sortMode === "priority"
+      ? priorityDiff || dateDiff
+      : dateDiff || priorityDiff;
+  };
+
+  const resetForm = () => {
+    editingId = null;
+    el("name").value = "";
+    el("genre").value = "仕事";
+    el("date").value = "";
+    el("priority").value = "中";
+    el("memo").value = "";
+    el("editBadge").hidden = true;
+    el("cancel").hidden = true;
+
+    document.querySelectorAll("[data-save-type]").forEach(button => {
+      const type = button.dataset.saveType;
+      button.textContent =
+        type === "none" ? "通常タスクに追加" :
+        type === "daily" ? "☀️ デイリーに追加" :
+        type === "weekly" ? "📅 ウィークリーに追加" :
+        "🗓️ マンスリーに追加";
+    });
+  };
+
+  const startEdit = task => {
+    editingId = task.id;
+    el("name").value = task.n || "";
+    el("genre").value = genres[task.g] ? task.g : "仕事";
+    el("date").value = task.d || "";
+    el("priority").value = task.p || "中";
+    el("memo").value = task.m || "";
+    el("editBadge").textContent = "編集中：" + repeatLabels[task.repeat || "none"];
+    el("editBadge").hidden = false;
+    el("cancel").hidden = false;
+
+    document.querySelectorAll("[data-save-type]").forEach(button => {
+      const type = button.dataset.saveType;
+      button.textContent =
+        type === "none" ? "通常タスクとして更新" :
+        type === "daily" ? "☀️ デイリーとして更新" :
+        type === "weekly" ? "📅 ウィークリーとして更新" :
+        "🗓️ マンスリーとして更新";
+    });
+
+    el("name").focus();
+    el("name").select();
+    window.scrollTo({top:0, behavior:"smooth"});
+  };
+
+  const taskCard = (task, compact = false) => {
+    const isDone = effectiveDone(task);
+    const icon =
+      task.p === "高" ? "🔴" :
+      task.p === "中" ? "🟡" : "🟢";
+
+    const overdue =
+      task.repeat === "none" &&
+      !isDone &&
+      task.d &&
+      task.d < today();
+
+    const repeatIcon =
+      task.repeat === "daily" ? "☀️" :
+      task.repeat === "weekly" ? "📅" :
+      task.repeat === "monthly" ? "🗓️" : "";
+
+    const meta = compact
+      ? `${icon} ${escapeHtml(task.p)} ${task.m ? "📝" : ""}`
+      : `${escapeHtml(task.g)}　${icon} ${escapeHtml(task.p)}　${task.d ? "📅 " + escapeHtml(task.d) : ""} ${task.m ? "📝" : ""} ${repeatIcon} ${overdue ? "🚨期限切れ" : ""}`;
+
+    return `
+      <div class="task-row">
+        <input
+          class="task-check"
+          type="checkbox"
+          data-complete="${task.id}"
+          title="完了"
+          ${isDone ? "checked" : ""}
+        >
+
+        <details class="task">
+          <summary class="task-summary">
+            <span class="arrow">▶</span>
+            <div class="task-main">
+              <span class="task-name ${isDone ? "done" : ""}">
+                ${escapeHtml(task.n)}
+              </span>
+              <div class="task-meta">${meta}</div>
+            </div>
+          </summary>
+
+          <div class="task-body">
+            <div class="memo ${task.m ? "" : "empty"}">
+              ${task.m ? escapeHtml(task.m) : "メモなし"}
+            </div>
+            <div class="task-buttons">
+              <button class="btn" data-edit="${task.id}">✏️ 編集</button>
+              <button class="btn" data-delete="${task.id}">🗑️ 削除</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    `;
+  };
+
+  const bindTaskEvents = () => {
+    document.querySelectorAll("[data-complete]").forEach(input => {
+      input.addEventListener("change", () => {
+        const task = tasks.find(
+          item => String(item.id) === input.dataset.complete
+        );
+        if (!task) return;
+
+        if (task.repeat && task.repeat !== "none") {
+          task.lastDone = input.checked ? periodKey(task.repeat) : "";
+        } else {
+          task.done = input.checked;
+        }
+
+        saveTasks();
+        render();
+      });
+    });
+
+    document.querySelectorAll("[data-edit]").forEach(button => {
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        const task = tasks.find(
+          item => String(item.id) === button.dataset.edit
+        );
+        if (task) startEdit(task);
+      });
+    });
+
+    document.querySelectorAll("[data-delete]").forEach(button => {
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        const id = button.dataset.delete;
+        if (!confirm("このタスクを削除しますか？")) return;
+
+        tasks = tasks.filter(item => String(item.id) !== id);
+        if (String(editingId) === id) resetForm();
+
+        saveTasks();
+        render();
+      });
+    });
+  };
+
+  const renderNav = () => {
+    const nav = el("nav");
+
+    const incomplete = tasks.filter(
+      task => task.repeat === "none" && !effectiveDone(task)
+    );
+
+    nav.innerHTML = Object.entries(genres)
+      .map(([key, label]) => {
+        const count =
+          key === "all"
+            ? incomplete.length
+            : incomplete.filter(task => task.g === key).length;
+
+        return `
+          <button
+            type="button"
+            data-genre="${key}"
+            class="${selectedGenre === key ? "active" : ""}"
+          >
+            <span class="nav-label">${label}</span>
+            <span class="nav-count">${count || ""}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    nav.querySelectorAll("[data-genre]").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedGenre = button.dataset.genre;
+        render();
+      });
+    });
+  };
+
+  const renderRecurringGroup = (type, titleId, areaId, titleText) => {
+    const group = tasks
+      .filter(task => task.repeat === type)
+      .sort(compareTasks);
+
+    const completed = group.filter(effectiveDone).length;
+
+    el(titleId).textContent =
+      `${titleText} (${completed}/${group.length} 完了)`;
+
+    el(areaId).innerHTML =
+      group.length
+        ? group.map(task => taskCard(task, true)).join("")
+        : `<div class="empty">${titleText}はまだありません</div>`;
+  };
+
+  const renderNormalTasks = () => {
+    const visible = tasks
+      .filter(task => {
+        if (task.repeat !== "none") return false;
+
+        const genreMatch =
+          selectedGenre === "all" || task.g === selectedGenre;
+
+        const doneMatch =
+          showDone || !effectiveDone(task);
+
+        return genreMatch && doneMatch;
+      })
+      .sort(compareTasks);
+
+    el("heading").textContent = genres[selectedGenre];
+    el("listTitle").textContent = genres[selectedGenre];
+
+    el("items").innerHTML =
+      visible.length
+        ? visible.map(task => taskCard(task)).join("")
+        : `<div style="color:#999;padding:40px 10px;text-align:center">タスクなし</div>`;
+  };
+
+  const render = () => {
+    renderNav();
+    renderRecurringGroup("daily", "dailyTitle", "dailyArea", "デイリータスク");
+    renderRecurringGroup("weekly", "weeklyTitle", "weeklyArea", "ウィークリータスク");
+    renderRecurringGroup("monthly", "monthlyTitle", "monthlyArea", "マンスリータスク");
+    renderNormalTasks();
+    bindTaskEvents();
+  };
+
+  const saveWithType = repeatType => {
+    const name = el("name").value.trim();
+    if (!name) {
+      el("name").focus();
+      return;
+    }
+
+    let task =
+      editingId === null
+        ? null
+        : tasks.find(item => String(item.id) === String(editingId));
+
+    const previousRepeat = task ? task.repeat : "none";
+
+    if (!task) {
+      task = {
+        id: Date.now() + "-" + Math.random().toString(36).slice(2),
+        done: false,
+        lastDone: ""
+      };
+      tasks.push(task);
+    }
+
+    Object.assign(task, {
+      n: name,
+      g: el("genre").value,
+      d: el("date").value,
+      p: el("priority").value,
+      m: el("memo").value.trim(),
+      repeat: repeatType
+    });
+
+    // 通常↔反復、または反復種別変更時は完了状態をリセット
+    if (previousRepeat !== repeatType) {
+      task.done = false;
+      task.lastDone = "";
+    }
+
+    saveTasks();
+    resetForm();
+    render();
+    el("name").focus();
+  };
+
+  document.querySelectorAll("[data-save-type]").forEach(button => {
+    button.addEventListener("click", () => {
+      saveWithType(button.dataset.saveType);
+    });
+  });
+
+  el("cancel").addEventListener("click", resetForm);
+
+  el("name").addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      if (editingId !== null) {
+        const current = tasks.find(
+          item => String(item.id) === String(editingId)
+        );
+        saveWithType(current?.repeat || "none");
+      } else {
+        saveWithType("none");
+      }
+    }
+
+    if (event.key === "Escape" && editingId !== null) {
+      resetForm();
+    }
+  });
+
+  el("sort").addEventListener("change", event => {
+    sortMode = event.target.value;
+    render();
+  });
+
+  el("showDone").addEventListener("change", event => {
+    showDone = event.target.checked;
+    render();
+  });
+
+  const resetRepeatGroup = type => {
+    tasks.forEach(task => {
+      if (task.repeat === type) task.lastDone = "";
+    });
+    saveTasks();
+    render();
+  };
+
+  el("resetDaily").addEventListener("click", () => resetRepeatGroup("daily"));
+  el("resetWeekly").addEventListener("click", () => resetRepeatGroup("weekly"));
+  el("resetMonthly").addEventListener("click", () => resetRepeatGroup("monthly"));
+
   render();
 })();
 </script>
