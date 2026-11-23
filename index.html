@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Task Dashboard v13</title>
+<title>Task Dashboard v14</title>
 <style>
   :root{
     --bg:#f6f7f8;
@@ -188,6 +188,41 @@
   }
   .top-nav button:hover{background:#f1f4f7}
   .top-nav button.active{color:#17395f;background:#dfe7f2}
+
+  .category-settings{margin-left:auto;flex:0 0 auto}
+  .category-manager{
+    width:min(100% - 24px,480px);
+    max-height:calc(100% - 24px);
+    padding:16px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    overflow:auto;
+  }
+  .category-manager-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .category-manager-header h2{margin:0;color:#17395f;font-size:18px}
+  .category-manager-rows{
+    display:grid;
+    gap:8px;
+    padding-top:14px;
+    margin-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .category-manager-row{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+    gap:8px;
+  }
+  .category-manager-status{margin:10px 0 0;color:#46576a;font-size:13px}
+  .category-manager-status:empty{display:none}
+  .task-lane-heading,.current-filter,.timeline-title{overflow-wrap:anywhere}
 
   .timeline-area{
     padding:14px 24px 10px;
@@ -853,6 +888,7 @@
     }
     .top-nav{width:100%;padding-bottom:2px}
     .top-nav button{padding:8px 12px;font-size:14px}
+    .category-settings{position:absolute;top:9px;right:12px}
     .create-area,.recurring-area,.toolbar,.content{padding-left:12px;padding-right:12px}
     .memo-page{padding-inline:12px}
     .memo-editor{scroll-margin-top:112px}
@@ -876,6 +912,7 @@
       <button class="dashboard-brand" id="dashboardHome" type="button"
               aria-label="Task Dashboard すべてのタスク">Task Dashboard</button>
       <nav class="top-nav" id="nav" aria-label="メインナビゲーション"></nav>
+      <button class="btn category-settings" id="categorySettings" type="button" aria-haspopup="dialog">大項目の管理</button>
     </header>
 
     <p class="storage-notice" id="storageNotice" role="status">操作できない場合は、HTMLをダウンロードしてChromeで開くか、公開済みのGitHub Pagesから開いてください。</p>
@@ -895,13 +932,8 @@
               <input class="control" id="timelineTitle" required placeholder="例：大会に参加">
             </div>
             <div class="field timeline-genre-field">
-              <label class="label" for="timelineGenre">ジャンル</label>
-              <select class="control" id="timelineGenre" required>
-                <option>仕事</option>
-                <option>MTG</option>
-                <option>スキルアップ</option>
-                <option>私用</option>
-              </select>
+              <label class="label" for="timelineGenre">大項目</label>
+              <select class="control" id="timelineGenre" required></select>
             </div>
             <div class="field">
               <label class="label" for="timelineDate">日付</label>
@@ -949,13 +981,8 @@
           </div>
 
           <div class="field">
-            <label class="label" for="genre">ジャンル</label>
-            <select id="genre" class="control">
-              <option>仕事</option>
-              <option>MTG</option>
-              <option>スキルアップ</option>
-              <option>私用</option>
-            </select>
+            <label class="label" for="genre">大項目</label>
+            <select id="genre" class="control"></select>
           </div>
 
           <div class="field">
@@ -1069,6 +1096,20 @@
   </main>
 </div>
 
+<dialog class="category-manager" id="categoryManager" aria-labelledby="categoryManagerTitle">
+  <header class="category-manager-header">
+    <h2 id="categoryManagerTitle">大項目の管理</h2>
+    <button class="btn" id="categoryManagerClose" type="button">閉じる</button>
+  </header>
+  <label class="label" for="categoryNewName">新しい大項目</label>
+  <div class="category-manager-row">
+    <input class="control" id="categoryNewName" placeholder="例：家計">
+    <button class="btn primary" id="categoryAdd" type="button">追加</button>
+  </div>
+  <p class="category-manager-status" id="categoryStatus" role="status"></p>
+  <div class="category-manager-rows" id="categoryRows"></div>
+</dialog>
+
 <dialog class="delete-dialog" id="deleteDialog" aria-labelledby="deleteMessage">
   <p id="deleteMessage"></p>
   <div class="delete-dialog-actions">
@@ -1086,6 +1127,7 @@
 (() => {
   const STORAGE_KEY = "simple_tasks_v2";
   const TIMELINE_STORAGE_KEY = "task_dashboard_timeline_v1";
+  const CATEGORY_STORAGE_KEY = "task_dashboard_categories_v1";
 
   let storage;
   let temporaryStorage = false;
@@ -1134,10 +1176,41 @@
     仕事: "💼",
     MTG: "🃏",
     スキルアップ: "📚",
-    私用: "🏠"
+    私用: "🏠",
+    memos: "📝"
   };
-  const categoryNames = Object.keys(genreIcons);
-  const defaultGenre = () => selectedGenre === "all" ? categoryNames[0] : selectedGenre;
+  // 旧版のタスク・予定が持つ大項目の文字列を既存項目のIDとして保持する。
+  const defaultCategories = [
+    {id:"仕事", name:"仕事"},
+    {id:"MTG", name:"MTG"},
+    {id:"スキルアップ", name:"スキルアップ"},
+    {id:"私用", name:"私用"},
+    {id:"memos", name:"メモ"}
+  ];
+
+  const readCategories = () => {
+    try {
+      const raw = storage.getItem(CATEGORY_STORAGE_KEY);
+      if (raw === null) return defaultCategories;
+      const stored = JSON.parse(raw);
+      if (!Array.isArray(stored) || !stored.every(item =>
+        item && typeof item.id === "string" && typeof item.name === "string" &&
+        item.name.trim() && (item.id.startsWith("category-") ||
+          defaultCategories.some(original => original.id === item.id)))) return null;
+      const ids = new Set(stored.map(item => item.id));
+      if (ids.size !== stored.length || defaultCategories.some(item => !ids.has(item.id))) return null;
+      return stored;
+    } catch {
+      return null;
+    }
+  };
+
+  let categories = readCategories() ?? defaultCategories;
+  const taskCategories = () => categories.filter(item => item.id !== "memos");
+  const categoryName = id => categories.find(item => item.id === id)?.name ?? id;
+  const categoryIcon = id => genreIcons[id] ?? "📁";
+  const isTaskCategory = id => id !== "memos" && categories.some(item => item.id === id);
+  const defaultGenre = () => selectedGenre === "all" ? taskCategories()[0].id : selectedGenre;
   const matchesGenre = genre => selectedGenre === "all" || genre === selectedGenre;
 
   const repeatLabels = {
@@ -1256,7 +1329,7 @@
     button.hidden = !genre;
     button.dataset.genre = genre;
     button.dataset.date = date;
-    button.textContent = genre ? genre + "のタイムラインを開く" : "";
+    button.textContent = genre ? categoryName(genre) + "のタイムラインを開く" : "";
   };
 
   const setTimelineFormVisible = visible => {
@@ -1268,7 +1341,7 @@
   const openTimelineForm = (entry = null) => {
     editingTimelineId = entry?.id ?? null;
     el("timelineTitle").value = entry?.title ?? "";
-    el("timelineGenre").value = entry?.genre ?? defaultGenre();
+    el("timelineGenre").value = isTaskCategory(entry?.genre) ? entry.genre : defaultGenre();
     el("timelineDate").value = entry?.date ?? today();
     el("timelineTime").value = entry?.time ?? "";
     el("timelineMemo").value = entry?.memo ?? "";
@@ -1309,7 +1382,7 @@
     const id = escapeHtml(entry.id);
     return `<article class="timeline-entry">
       <div class="timeline-entry-meta">
-        <span class="timeline-genre">${escapeHtml(entry.genre)}</span>
+        <span class="timeline-genre">${escapeHtml(categoryName(entry.genre))}</span>
         ${entry.time ? `<time class="timeline-time">${escapeHtml(entry.time)}</time>` : ""}
       </div>
       <strong class="timeline-entry-title">${escapeHtml(entry.title)}</strong>
@@ -1326,7 +1399,7 @@
   const renderTimeline = () => {
     el("timelineHeading").textContent = selectedGenre === "all"
       ? "タイムライン"
-      : selectedGenre + "のタイムライン";
+      : categoryName(selectedGenre) + "のタイムライン";
 
     const currentDate = today();
     timelineRenderedOn = currentDate;
@@ -1429,7 +1502,7 @@
     taskStatus("");
     editingId = task.id;
     el("name").value = task.n || "";
-    el("genre").value = categoryNames.includes(task.g) ? task.g : defaultGenre();
+    el("genre").value = isTaskCategory(task.g) ? task.g : defaultGenre();
     el("date").value = task.d || "";
     el("priority").value = task.p || "中";
     el("memo").value = task.m || "";
@@ -1470,7 +1543,7 @@
 
     const meta = compact
       ? `${icon} ${escapeHtml(task.p)} ${task.m ? "📝" : ""}`
-      : `<span class="task-genre">${escapeHtml(task.g)}　</span>${icon} ${escapeHtml(task.p)}　${task.d ? "📅 " + escapeHtml(task.d) : ""} ${task.m ? "📝" : ""} ${repeatIcon} ${overdue ? "🚨期限切れ" : ""}`;
+      : `<span class="task-genre">${escapeHtml(categoryName(task.g))}　</span>${icon} ${escapeHtml(task.p)}　${task.d ? "📅 " + escapeHtml(task.d) : ""} ${task.m ? "📝" : ""} ${repeatIcon} ${overdue ? "🚨期限切れ" : ""}`;
 
     return `
       <div class="task-row">
@@ -1598,21 +1671,21 @@
       .sort(compareTasks);
 
     el("listTitle").textContent =
-      selectedGenre === "all" ? "すべてのタスク" : selectedGenre + "のタスク";
+      selectedGenre === "all" ? "すべてのタスク" : categoryName(selectedGenre) + "のタスク";
 
     if (selectedGenre !== "all") {
       el("items").innerHTML = taskRows(visible);
       return;
     }
 
-    const lanes = categoryNames.map((genre, index) => `
-      <section class="task-lane" data-genre="${genre}" aria-labelledby="task-lane-heading-${index}">
+    const lanes = taskCategories().map(({id, name}, index) => `
+      <section class="task-lane" data-genre="${escapeHtml(id)}" aria-labelledby="task-lane-heading-${index}">
         <h3 class="task-lane-heading" id="task-lane-heading-${index}">
-          <span aria-hidden="true">${genreIcons[genre]}</span> ${genre}
+          <span aria-hidden="true">${categoryIcon(id)}</span> ${escapeHtml(name)}
         </h3>
-        ${taskRows(visible.filter(task => task.g === genre))}
+        ${taskRows(visible.filter(task => task.g === id))}
       </section>`).join("");
-    const other = visible.filter(task => !categoryNames.includes(task.g));
+    const other = visible.filter(task => !isTaskCategory(task.g));
     const otherSection = other.length ? `<section class="other-tasks" aria-labelledby="other-tasks-heading">
       <h3 class="task-lane-heading" id="other-tasks-heading">その他のタスク</h3>
       ${taskRows(other)}
@@ -1695,7 +1768,7 @@
     render();
     const action = previous ? "更新" : "追加";
     const listView = matchesGenre(task.g) ? selectedGenre : task.g;
-    taskStatus(`「${name}」を${task.g}の${repeatLabels[repeatType]}タスクに${action}しました。`,
+    taskStatus(`「${name}」を${categoryName(task.g)}の${repeatLabels[repeatType]}タスクに${action}しました。`,
       repeatType === "none" ? listView : "");
     el("name").focus({preventScroll:true});
   };
@@ -1755,11 +1828,124 @@
   el("resetMonthly").addEventListener("click", () => resetRepeatGroup("monthly"));
 
   el("dashboardHome").dataset.view = "all";
-  el("nav").innerHTML = categoryNames.map(genre => `
-    <button type="button" data-view="${genre}">${genreIcons[genre]} ${genre}</button>
-  `).join("") + '<button type="button" data-view="memos">📝 メモ</button>';
-  document.querySelectorAll("[data-view]").forEach(button => {
-    button.addEventListener("click", () => showView(button.dataset.view));
+  el("dashboardHome").addEventListener("click", () => showView("all"));
+  el("nav").addEventListener("click", event => {
+    const button = event.target.closest("[data-view]");
+    if (button) showView(button.dataset.view);
+  });
+
+  const renderCategoryControls = () => {
+    const nav = el("nav");
+    const scrollLeft = nav.scrollLeft;
+    const navigationItems = [...taskCategories(), categories.find(item => item.id === "memos")];
+    nav.innerHTML = navigationItems.map(({id, name}) => `
+      <button type="button" data-view="${escapeHtml(id)}">
+        <span aria-hidden="true">${categoryIcon(id)}</span> ${escapeHtml(name)}
+      </button>
+    `).join("");
+    nav.scrollLeft = scrollLeft;
+
+    const options = taskCategories().map(({id, name}) =>
+      `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join("");
+    for (const field of [el("genre"), el("timelineGenre")]) {
+      const selected = field.value;
+      field.innerHTML = options;
+      field.value = isTaskCategory(selected) ? selected : defaultGenre();
+    }
+    el("memoHeading").textContent = categoryName("memos");
+    const timelineLink = el("openTimelineGenre");
+    if (timelineLink.dataset.genre) {
+      timelineLink.textContent = categoryName(timelineLink.dataset.genre) + "のタイムラインを開く";
+    }
+  };
+
+  const applyCategories = updated => {
+    categories = updated;
+    if (selectedGenre !== "all" && !isTaskCategory(selectedGenre)) {
+      selectedGenre = "all";
+      if (activeView !== "memos") activeView = "all";
+    }
+    renderCategoryControls();
+    renderTimeline();
+    render();
+  };
+
+  const categoryFieldId = id => "category-name-" + id;
+  const categoryRowMarkup = ({id, name}) => `
+    <div class="category-manager-row">
+      <input class="control" id="${escapeHtml(categoryFieldId(id))}" value="${escapeHtml(name)}"
+        data-category-name="${escapeHtml(id)}" aria-label="${escapeHtml(name)}の名前">
+      <button class="btn" type="button" data-save-category="${escapeHtml(id)}">保存</button>
+    </div>`;
+
+  const renderCategoryRows = () => {
+    const items = [...taskCategories(), categories.find(item => item.id === "memos")];
+    el("categoryRows").innerHTML = items.map(categoryRowMarkup).join("");
+  };
+
+  const saveCategoryName = (id, input) => {
+    const status = el("categoryStatus");
+    const name = input.value.trim();
+    if (!name) {
+      status.textContent = "大項目の名前を入力してください。";
+      input.focus();
+      return;
+    }
+
+    const current = readCategories();
+    if (!current || (id && !current.some(item => item.id === id))) {
+      status.textContent = "保存済みの大項目を読み込めませんでした。";
+      return;
+    }
+    const nameKey = value => value.normalize("NFKC").toLocaleLowerCase("ja-JP");
+    if (current.some(item => item.id !== id && nameKey(item.name) === nameKey(name))) {
+      status.textContent = "同じ名前の大項目があります。";
+      input.focus();
+      return;
+    }
+
+    const item = {id:id || "category-" + Date.now() + "-" + Math.random().toString(36).slice(2), name};
+    const updated = id ? current.map(existing => existing.id === id ? item : existing)
+      : [...current, item];
+    try {
+      storage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(updated));
+    } catch {
+      status.textContent = "大項目を保存できませんでした。";
+      return;
+    }
+
+    applyCategories(updated);
+    if (id) {
+      input.value = name;
+      input.setAttribute("aria-label", name + "の名前");
+      status.textContent = `「${name}」に名前を変更しました。`;
+    } else {
+      el(categoryFieldId("memos")).parentElement.insertAdjacentHTML("beforebegin", categoryRowMarkup(item));
+      input.value = "";
+      input.focus();
+      status.textContent = `「${name}」を追加しました。`;
+    }
+  };
+
+  el("categorySettings").addEventListener("click", () => {
+    renderCategoryRows();
+    el("categoryStatus").textContent = "";
+    el("categoryManager").showModal();
+  });
+  el("categoryManagerClose").addEventListener("click", () => el("categoryManager").close());
+  el("categoryAdd").addEventListener("click", () => saveCategoryName("", el("categoryNewName")));
+  el("categoryRows").addEventListener("click", event => {
+    const button = event.target.closest("[data-save-category]");
+    if (!button) return;
+    const id = button.dataset.saveCategory;
+    saveCategoryName(id, el(categoryFieldId(id)));
+  });
+  el("categoryManager").addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
+    const input = event.target;
+    if (input.id !== "categoryNewName" && input.dataset.categoryName === undefined) return;
+    event.preventDefault();
+    saveCategoryName(input.dataset.categoryName ?? "", input);
   });
 
   el("timelineOpen").addEventListener("click", () => openTimelineForm());
@@ -1825,7 +2011,7 @@
     closeTimelineForm();
     const action = previous ? "更新" : "登録";
     const outsideTimeline = !matchesGenre(entry.genre);
-    timelineStatus(`「${title}」を${entry.genre}のタイムラインに${action}しました。`,
+    timelineStatus(`「${title}」を${categoryName(entry.genre)}のタイムラインに${action}しました。`,
       outsideTimeline ? entry.genre : "", entry.date);
     renderTimeline();
     const list = el("timelineList");
@@ -1874,6 +2060,10 @@
   });
 
   window.addEventListener("storage", event => {
+    if (event.key === CATEGORY_STORAGE_KEY || event.key === null) {
+      const current = readCategories();
+      if (current) applyCategories(current);
+    }
     if (event.key === TIMELINE_STORAGE_KEY || event.key === null) {
       renderTimeline();
     }
@@ -2168,6 +2358,7 @@
     }
   });
 
+  renderCategoryControls();
   showView("all");
   if (!loadedTasks) taskStatus("保存済みのタスクを読み込めませんでした。");
   if (temporaryStorage) {
