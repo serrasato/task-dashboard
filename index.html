@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Task Dashboard v14</title>
+<title>Task Dashboard v15</title>
 <style>
   :root{
     --bg:#f6f7f8;
@@ -186,10 +186,15 @@
     font-weight:700;
     white-space:nowrap;
   }
+  .top-nav[hidden]{display:none}
   .top-nav button:hover{background:#f1f4f7}
   .top-nav button.active{color:#17395f;background:#dfe7f2}
 
   .category-settings{margin-left:auto;flex:0 0 auto}
+  .sync-panel{margin:12px 24px 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .sync-fields{display:flex;align-items:end;flex-wrap:wrap;gap:8px}
+  .sync-fields .field{flex:0 1 260px}
+  #syncStatus{margin:8px 0 0;font-size:13px;overflow-wrap:anywhere}
   .category-manager{
     width:min(100% - 24px,480px);
     max-height:calc(100% - 24px);
@@ -917,6 +922,28 @@
 
     <p class="storage-notice" id="storageNotice" role="status">操作できない場合は、HTMLをダウンロードしてChromeで開くか、公開済みのGitHub Pagesから開いてください。</p>
 
+    <section class="sync-panel" id="syncPanel" aria-label="クラウド同期" hidden>
+      <div id="syncLoginFields" hidden>
+        <div class="sync-fields">
+          <div class="field">
+            <label class="label" for="syncEmail">メールアドレス</label>
+            <input class="control" id="syncEmail" type="email" autocomplete="username">
+          </div>
+          <div class="field">
+            <label class="label" for="syncPassword">パスワード</label>
+            <input class="control" id="syncPassword" type="password" autocomplete="current-password">
+          </div>
+          <button class="btn primary" id="syncLogin" type="button">ログイン</button>
+        </div>
+      </div>
+      <div id="syncAccount" hidden>
+        <button class="btn primary" id="syncRefresh" type="button">同期</button>
+        <button class="btn" id="syncImport" type="button">この端末のデータを取り込む</button>
+        <button class="btn" id="syncLogout" type="button">ログアウト</button>
+      </div>
+      <p id="syncStatus" role="status"></p>
+    </section>
+
     <div class="dashboard-view" id="dashboardView">
     <section class="timeline-area" id="timelineArea" aria-labelledby="timelineHeading">
       <div class="timeline-card">
@@ -1125,6 +1152,11 @@
 
 <script>
 (() => {
+  // SupabaseのConnect画面から取得した2つの値を、引用符の内側に貼り付けます。
+  const SUPABASE_PROJECT_URL = "https://zipmuzzbxbbxaahuplxy.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_nGGMNnJyBxp7H-_sOv5jqw_cgosIHLT";
+  const syncConfigured = SUPABASE_PROJECT_URL !== "ここにProject URL" ||
+    SUPABASE_PUBLISHABLE_KEY !== "sb_publishable_nGGMNnJyBxp7H-_sOv5jqw_cgosIHLT";
   const STORAGE_KEY = "simple_tasks_v2";
   const TIMELINE_STORAGE_KEY = "task_dashboard_timeline_v1";
   const CATEGORY_STORAGE_KEY = "task_dashboard_categories_v1";
@@ -1143,10 +1175,10 @@
     };
   }
 
-  const readTasks = () => {
+  const readTasks = (source = storage) => {
     try {
-      const saved = JSON.parse(storage.getItem(STORAGE_KEY) ??
-        storage.getItem("simple_tasks_v1") ?? "[]");
+      const saved = JSON.parse(source.getItem(STORAGE_KEY) ??
+        source.getItem("simple_tasks_v1") ?? "[]");
       if (!Array.isArray(saved) || !saved.every(task =>
         task && typeof task === "object" && !Array.isArray(task)
       )) return null;
@@ -1188,9 +1220,9 @@
     {id:"memos", name:"メモ"}
   ];
 
-  const readCategories = () => {
+  const readCategories = (source = storage) => {
     try {
-      const raw = storage.getItem(CATEGORY_STORAGE_KEY);
+      const raw = source.getItem(CATEGORY_STORAGE_KEY);
       if (raw === null) return defaultCategories;
       const stored = JSON.parse(raw);
       if (!Array.isArray(stored) || !stored.every(item =>
@@ -1258,13 +1290,17 @@
     button.dataset.viewTarget = listView;
   };
 
-  const saveTasks = updated => {
+  const saveTasks = async (current, updated) => {
     try {
-      storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      await saveCollection("task", STORAGE_KEY, current, updated);
       tasks = updated;
       return true;
-    } catch {
-      taskStatus("タスクを保存できませんでした。ブラウザの保存設定や空き容量を確認してください。");
+    } catch (error) {
+      if (syncConfigured) {
+        tasks = readTasks() ?? [];
+        render();
+      }
+      taskStatus(saveErrorMessage(error, "タスク"));
       el("taskStatus").scrollIntoView({block:"nearest"});
       return false;
     }
@@ -1298,9 +1334,9 @@
       "'": "&#39;"
     })[char]);
 
-  const readTimeline = () => {
+  const readTimeline = (source = storage) => {
     try {
-      const entries = JSON.parse(storage.getItem(TIMELINE_STORAGE_KEY) ?? "[]");
+      const entries = JSON.parse(source.getItem(TIMELINE_STORAGE_KEY) ?? "[]");
       const valid = Array.isArray(entries) && entries.every(entry =>
         entry && ["id", "title", "genre", "date", "time", "memo"].every(
           field => typeof entry[field] === "string"
@@ -1312,12 +1348,12 @@
     }
   };
 
-  const saveTimeline = entries => {
+  const saveTimeline = async (current, entries) => {
     try {
-      storage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(entries));
+      await saveCollection("timeline", TIMELINE_STORAGE_KEY, current, entries);
       return true;
-    } catch {
-      timelineStatus("タイムラインを保存できませんでした。ブラウザの保存設定や空き容量を確認してください。");
+    } catch (error) {
+      timelineStatus(saveErrorMessage(error, "タイムライン"));
       el("timelineStatus").scrollIntoView({block:"nearest"});
       return false;
     }
@@ -1582,7 +1618,7 @@
 
   const bindTaskEvents = () => {
     document.querySelectorAll("[data-complete]").forEach(input => {
-      input.addEventListener("change", () => {
+      input.addEventListener("change", async () => {
         const current = tasksForChange();
         const task = current?.find(
           item => String(item.id) === input.dataset.complete
@@ -1600,7 +1636,7 @@
         const change = task.repeat === "none"
           ? {done: checked}
           : {lastDone: checked ? periodKey(task.repeat) : ""};
-        if (!saveTasks(current.map(item => item === task ? {...task, ...change} : item))) {
+        if (!await saveTasks(current, current.map(item => item === task ? {...task, ...change} : item))) {
           input.checked = effectiveDone(task);
           return;
         }
@@ -1624,7 +1660,7 @@
         const id = button.dataset.delete;
         if (!await confirmDelete("このタスクを削除しますか？")) return;
         const current = tasksForChange();
-        if (!current || !saveTasks(current.filter(item => String(item.id) !== id))) return;
+        if (!current || !await saveTasks(current, current.filter(item => String(item.id) !== id))) return;
         if (String(editingId) === id) resetForm();
         taskStatus("タスクを削除しました。");
         render();
@@ -1726,7 +1762,7 @@
     if (focusDate) goToTimelineDate(focusDate);
   };
 
-  const saveWithType = repeatType => {
+  const saveWithType = async repeatType => {
     const name = el("name").value.trim();
     if (!name) {
       taskStatus("タスク名を入力してください。");
@@ -1763,7 +1799,7 @@
     const updated = previous
       ? current.map(item => item === previous ? task : item)
       : [...current, task];
-    if (!saveTasks(updated)) return;
+    if (!await saveTasks(current, updated)) return;
     resetForm();
     render();
     const action = previous ? "更新" : "追加";
@@ -1775,7 +1811,7 @@
 
   document.querySelectorAll("[data-save-type]").forEach(button => {
     button.addEventListener("click", () => {
-      saveWithType(button.dataset.saveType);
+      return saveWithType(button.dataset.saveType);
     });
   });
 
@@ -1794,9 +1830,9 @@
         const current = tasks.find(
           item => String(item.id) === String(editingId)
         );
-        saveWithType(current?.repeat || "none");
+        return saveWithType(current?.repeat || "none");
       } else {
-        saveWithType("none");
+        return saveWithType("none");
       }
     }
 
@@ -1815,11 +1851,11 @@
     render();
   });
 
-  const resetRepeatGroup = type => {
+  const resetRepeatGroup = async type => {
     const current = tasksForChange();
     if (!current) return;
     const reset = current.map(task => task.repeat === type ? {...task, lastDone:""} : task);
-    if (!saveTasks(reset)) return;
+    if (!await saveTasks(current, reset)) return;
     render();
   };
 
@@ -1883,7 +1919,7 @@
     el("categoryRows").innerHTML = items.map(categoryRowMarkup).join("");
   };
 
-  const saveCategoryName = (id, input) => {
+  const saveCategoryName = async (id, input) => {
     const status = el("categoryStatus");
     const name = input.value.trim();
     if (!name) {
@@ -1908,9 +1944,9 @@
     const updated = id ? current.map(existing => existing.id === id ? item : existing)
       : [...current, item];
     try {
-      storage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      status.textContent = "大項目を保存できませんでした。";
+      await saveCollection("category", CATEGORY_STORAGE_KEY, current, updated);
+    } catch (error) {
+      status.textContent = saveErrorMessage(error, "大項目");
       return;
     }
 
@@ -1938,14 +1974,14 @@
     const button = event.target.closest("[data-save-category]");
     if (!button) return;
     const id = button.dataset.saveCategory;
-    saveCategoryName(id, el(categoryFieldId(id)));
+    return saveCategoryName(id, el(categoryFieldId(id)));
   });
   el("categoryManager").addEventListener("keydown", event => {
     if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
     const input = event.target;
     if (input.id !== "categoryNewName" && input.dataset.categoryName === undefined) return;
     event.preventDefault();
-    saveCategoryName(input.dataset.categoryName ?? "", input);
+    return saveCategoryName(input.dataset.categoryName ?? "", input);
   });
 
   el("timelineOpen").addEventListener("click", () => openTimelineForm());
@@ -1962,7 +1998,7 @@
     timelineStatus("");
     el("timelineOpen").focus();
   });
-  const saveTimelineEntry = () => {
+  const saveTimelineEntry = async () => {
     const titleInput = el("timelineTitle");
     const title = titleInput.value.trim();
     if (!title) {
@@ -2006,7 +2042,7 @@
     const updated = previous
       ? entries.map(item => item.id === entry.id ? entry : item)
       : [...entries, entry];
-    if (!saveTimeline(updated)) return;
+    if (!await saveTimeline(entries, updated)) return;
 
     closeTimelineForm();
     const action = previous ? "更新" : "登録";
@@ -2030,7 +2066,7 @@
   el("timelineTitle").addEventListener("keydown", event => {
     if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
     event.preventDefault();
-    saveTimelineEntry();
+    return saveTimelineEntry();
   });
   el("deleteCancel").addEventListener("click", () => el("deleteDialog").close("cancel"));
   el("deleteConfirm").addEventListener("click", () => el("deleteDialog").close("delete"));
@@ -2052,7 +2088,7 @@
       openTimelineForm(entry);
       return;
     }
-    if (!saveTimeline(entries.filter(item => item.id !== id))) return;
+    if (!await saveTimeline(entries, entries.filter(item => item.id !== id))) return;
     if (editingTimelineId === id) closeTimelineForm();
     renderTimeline();
     timelineStatus("予定・記録を削除しました。");
@@ -2060,6 +2096,7 @@
   });
 
   window.addEventListener("storage", event => {
+    if (syncConfigured) return;
     if (event.key === CATEGORY_STORAGE_KEY || event.key === null) {
       const current = readCategories();
       if (current) applyCategories(current);
@@ -2132,13 +2169,13 @@
     request.onerror = () => onOpenError(request.error);
   });
 
-  const memoAccess = async (action, value) => {
+  const localMemoAccess = async (action, value) => {
     memoDatabasePromise ??= openMemoDatabase().catch(error => {
       memoDatabasePromise = undefined;
       throw error;
     });
     const db = await memoDatabasePromise;
-    el("memoStorageNotice").hidden = Boolean(db);
+    if (!syncConfigured) el("memoStorageNotice").hidden = Boolean(db);
     if (!db) {
       if (action === "getAll") return Array.from(temporaryMemos.values());
       if (action === "put") temporaryMemos.set(value.id, value);
@@ -2156,6 +2193,10 @@
     });
   };
 
+  const memoAccess = async (action, value) => {
+    return syncConfigured ? cloudMemoAccess(action, value) : localMemoAccess(action, value);
+  };
+
   const memoStatus = message => {
     el("memoStatus").textContent = message;
   };
@@ -2166,6 +2207,7 @@
   };
 
   const memoImageMarkup = (blob, index, urls) => {
+    if (!blob) return '<p class="memo-hint">画像を読み込めませんでした</p>';
     const url = URL.createObjectURL(blob);
     urls.push(url);
     return `<button class="memo-image-open" type="button" data-memo-image
@@ -2317,8 +2359,8 @@
       renderMemoList();
       setMemoDraft();
       memoStatus("メモを保存しました。");
-    } catch {
-      memoStatus("メモを保存できませんでした。入力内容を確認して再試行してください。");
+    } catch (error) {
+      memoStatus(saveErrorMessage(error, "メモ"));
     } finally {
       setMemoBusy(false);
     }
@@ -2351,15 +2393,450 @@
       renderMemoList();
       if (memoEditId === id) setMemoDraft();
       memoStatus("メモを削除しました。");
-    } catch {
-      memoStatus("メモを削除できませんでした。");
+    } catch (error) {
+      memoStatus(saveErrorMessage(error, "メモの削除操作"));
     } finally {
       setMemoBusy(false);
     }
   });
 
-  renderCategoryControls();
-  showView("all");
+  const cloudKinds = new Map([
+    [STORAGE_KEY, "task"],
+    [TIMELINE_STORAGE_KEY, "timeline"],
+    [CATEGORY_STORAGE_KEY, "category"]
+  ]);
+  const cloudRows = new Map(Array.from([...cloudKinds.values(), "memo"], kind => [kind, new Map()]));
+  const localStorageSource = storage;
+  let cloudClient;
+  let cloudUserId = "";
+  let cloudReady = false;
+  let cloudBusy = false;
+  let cloudLockedOnConflict = false;
+  const rowFields = "item_id,payload,revision";
+
+  class SyncConflict extends Error {}
+  const saveErrorMessage = (error, label) => {
+    if (!syncConfigured) {
+      return label + "を保存できませんでした。ブラウザの保存設定や空き容量を確認してください。";
+    }
+    if (error instanceof SyncConflict) {
+      return "別の端末で変更されています。編集内容を控え、編集をキャンセルしてから「同期」してください。";
+    }
+    return label + "の操作を完了できませんでした。通信状況とクラウド同期欄を確認してください。";
+  };
+  const syncStatus = message => { el("syncStatus").textContent = message; };
+
+  const visibleCloudItems = kind => Array.from(cloudRows.get(kind).values())
+    .filter(row => !row.payload.deleted)
+    .map(row => row.payload);
+
+  const cloudStorage = {
+    getItem(key) {
+      const kind = cloudKinds.get(key);
+      if (!kind) return null;
+      const items = visibleCloudItems(kind);
+      if (kind !== "category") return JSON.stringify(items);
+      const stored = new Map(items.map(item => [item.id, item]));
+      const builtIns = defaultCategories.map(item => stored.get(item.id) ?? item);
+      const custom = items.filter(item => item.id.startsWith("category-"))
+        .sort((a, b) => a.id.localeCompare(b.id));
+      return JSON.stringify([...builtIns, ...custom]);
+    }
+  };
+
+  const checkedResult = ({data, error}) => {
+    if (error) throw error;
+    return data;
+  };
+
+  const assertCloudUser = userId => {
+    if (!userId || userId !== cloudUserId) throw new Error("Cloud session changed");
+  };
+
+  const syncVisibility = () => {
+    el("syncLoginFields").hidden = Boolean(cloudUserId);
+    el("syncAccount").hidden = !cloudUserId;
+    el("dashboardView").hidden = !cloudReady || activeView === "memos";
+    el("memoPage").hidden = !cloudReady || activeView !== "memos";
+    for (const id of ["nav", "dashboardHome", "categorySettings"]) el(id).hidden = !cloudReady;
+    el("syncImport").disabled = !cloudReady || temporaryStorage;
+  };
+
+  const runCloud = async action => {
+    if (cloudBusy) throw new Error("Cloud request in progress");
+    cloudBusy = true;
+    for (const id of ["syncPanel", "dashboardView", "memoPage", "nav", "categoryManager"]) {
+      el(id).inert = true;
+    }
+    el("dashboardHome").disabled = true;
+    el("categorySettings").disabled = true;
+    try {
+      return await action();
+    } finally {
+      cloudBusy = false;
+      for (const id of ["syncPanel", "dashboardView", "memoPage", "nav", "categoryManager"]) {
+        el(id).inert = false;
+      }
+      el("dashboardHome").disabled = false;
+      el("categorySettings").disabled = false;
+    }
+  };
+
+  const writeCloudRow = async (kind, id, payload, userId, importOnly = false) => {
+    assertCloudUser(userId);
+    const rows = cloudRows.get(kind);
+    const previous = rows.get(id);
+    if (importOnly && previous) return false;
+    if (previous?.payload.deleted) throw new SyncConflict();
+
+    const table = cloudClient.from("dashboard_items");
+    let result;
+    if (previous) {
+      result = await table.update({payload, revision:Number(previous.revision) + 1})
+        .eq("user_id", userId).eq("kind", kind).eq("item_id", id)
+        .eq("revision", previous.revision).select(rowFields);
+    } else {
+      const record = {user_id:userId, kind, item_id:id, payload};
+      result = importOnly
+        ? await table.upsert(record, {onConflict:"user_id,kind,item_id", ignoreDuplicates:true}).select(rowFields)
+        : await table.insert(record).select(rowFields);
+    }
+
+    assertCloudUser(userId);
+    if (result.error?.code === "23505" || (!result.error && !result.data.length && !importOnly)) {
+      throw new SyncConflict();
+    }
+    const [saved] = checkedResult(result);
+    if (!saved) return false;
+    rows.set(id, saved);
+    return true;
+  };
+
+  const handleCloudWriteError = error => {
+    cloudLockedOnConflict = true;
+    syncStatus(error instanceof SyncConflict
+      ? "別の端末で更新されています。「同期」で最新の内容を読み込んでください。"
+      : "クラウド保存の結果を確認できませんでした。「同期」で保存先の状態を確認してください。");
+    throw error;
+  };
+
+  const saveCollection = (kind, key, current, updated) => {
+    if (!syncConfigured) {
+      storage.setItem(key, JSON.stringify(updated));
+      return;
+    }
+    return runCloud(async () => {
+      if (!cloudReady || cloudLockedOnConflict) throw new SyncConflict();
+      const userId = cloudUserId;
+      const before = new Map(current.map(item => [String(item.id), item]));
+      try {
+        for (const item of updated) {
+          const id = String(item.id);
+          const previous = before.get(id);
+          before.delete(id);
+          if (JSON.stringify(item) !== JSON.stringify(previous)) {
+            await writeCloudRow(kind, id, item, userId);
+          }
+        }
+        for (const id of before.keys()) {
+          await writeCloudRow(kind, id, {deleted:true}, userId);
+        }
+        syncStatus("クラウドに保存しました。");
+      } catch (error) {
+        handleCloudWriteError(error);
+      }
+    });
+  };
+
+  const encodeCloudMemo = async (memo, userId) => {
+    const images = [];
+    for (const {blob, caption, path} of memo.images) {
+      assertCloudUser(userId);
+      if (path) {
+        images.push({caption, path});
+        continue;
+      }
+      const hash = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+      const hex = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, "0")).join("");
+      const objectPath = userId + "/" + encodeURIComponent(memo.id) + "/" + hex;
+      assertCloudUser(userId);
+      const result = await cloudClient.storage.from("dashboard-images")
+        .upload(objectPath, blob, {contentType:blob.type, upsert:false});
+      // 同じ画像を再送した場合、以前のアップロードをそのまま使う。
+      const alreadyUploaded = result.error?.statusCode === "409" ||
+        result.error?.statusCode === 409 || result.error?.error === "Duplicate" ||
+        result.error?.code === "ResourceAlreadyExists" || result.error?.code === "KeyAlreadyExists";
+      if (!alreadyUploaded) checkedResult(result);
+      images.push({caption, path:objectPath});
+    }
+    return {...memo, images};
+  };
+
+  const decodeCloudMemos = async userId => {
+    const memos = visibleCloudItems("memo");
+    const output = [];
+    for (const memo of memos) {
+      const images = [];
+      for (const {caption, path} of memo.images) {
+        assertCloudUser(userId);
+        try {
+          const blob = checkedResult(await cloudClient.storage.from("dashboard-images").download(path));
+          images.push({blob, caption, path});
+        } catch {
+          images.push({blob:null, caption, path});
+        }
+      }
+      output.push({...memo, images});
+    }
+    assertCloudUser(userId);
+    return output;
+  };
+
+  const cloudMemoAccess = (action, value) => {
+    const userId = cloudUserId;
+    if (action === "getAll") return decodeCloudMemos(userId);
+    return runCloud(async () => {
+      if (!cloudReady || cloudLockedOnConflict) throw new SyncConflict();
+      try {
+        if (action === "delete") {
+          await writeCloudRow("memo", value, {deleted:true}, userId);
+        } else {
+          const memo = await encodeCloudMemo(value, userId);
+          await writeCloudRow("memo", value.id, memo, userId);
+        }
+        syncStatus("クラウドに保存しました。");
+      } catch (error) {
+        handleCloudWriteError(error);
+      }
+    });
+  };
+
+  const loadCloudRows = async userId => {
+    const loaded = new Map();
+    for (const kind of cloudRows.keys()) {
+      const rows = new Map();
+      let lastId = null;
+      while (true) {
+        let query = cloudClient.from("dashboard_items").select(rowFields)
+          .eq("user_id", userId).eq("kind", kind).order("item_id").limit(100);
+        if (lastId !== null) query = query.gt("item_id", lastId);
+        const page = checkedResult(await query);
+        for (const row of page) rows.set(row.item_id, row);
+        if (!page.length) break;
+        lastId = page[page.length - 1].item_id;
+      }
+      loaded.set(kind, rows);
+    }
+    assertCloudUser(userId);
+    for (const [kind, rows] of loaded) cloudRows.set(kind, rows);
+  };
+
+  const refreshCloud = async () => {
+    await loadCloudRows(cloudUserId);
+    cloudReady = true;
+    cloudLockedOnConflict = false;
+    tasks = readTasks() ?? [];
+    applyCategories(readCategories() ?? defaultCategories);
+    syncVisibility();
+    if (activeView === "memos") await refreshMemos();
+    syncStatus("同期しました。");
+  };
+
+  const resetCloudSession = (userId = "") => {
+    cloudUserId = userId;
+    cloudReady = false;
+    cloudLockedOnConflict = false;
+    for (const rows of cloudRows.values()) rows.clear();
+    tasks = [];
+    categories = defaultCategories;
+    selectedGenre = activeView = "all";
+    for (const id of ["categoryManager", "deleteDialog", "memoViewer"]) {
+      if (el(id).open) el(id).close();
+    }
+    el("categoryRows").replaceChildren();
+    resetForm();
+    closeTimelineForm();
+    timelineStatus("");
+    setMemoDraft();
+    savedMemos = [];
+    renderMemoList();
+    memoStatus("");
+    renderCategoryControls();
+    renderTimeline();
+    render();
+    syncVisibility();
+  };
+
+  const syncFailed = error => {
+    const detail = error?.code || error?.status || "";
+    syncStatus("同期できませんでした。Supabaseの接続情報とテーブルの設定を確認してください。" +
+      (detail ? " コード: " + detail : ""));
+  };
+
+  const hasOpenEditor = () => editingId !== null || !el("timelineForm").hidden ||
+    memoEditId !== null || el("categoryManager").open;
+
+  const initializeCloud = async () => {
+    storage = cloudStorage;
+    el("syncPanel").hidden = false;
+    resetCloudSession();
+    if (!/^https:\/\/[a-z0-9]+\.supabase\.co\/?$/.test(SUPABASE_PROJECT_URL) ||
+        !SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_")) {
+      el("syncLoginFields").hidden = true;
+      syncStatus("HTMLのProject URLとPublishable keyの2行を確認してください。");
+      return;
+    }
+    if (!window.supabase) {
+      el("syncLoginFields").hidden = true;
+      syncStatus("接続ライブラリを読み込んでいます…");
+      await new Promise(resolve => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        script.onload = script.onerror = resolve;
+        document.head.append(script);
+      });
+      if (!window.supabase) {
+        syncStatus("接続ライブラリを読み込めませんでした。ネットに接続してページを再読み込みしてください。");
+        return;
+      }
+      el("syncLoginFields").hidden = false;
+    }
+    syncStatus("クラウドのタスクやメモを使うにはログインしてください。");
+    cloudClient = window.supabase.createClient(SUPABASE_PROJECT_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth:{detectSessionInUrl:false}
+    });
+    cloudClient.auth.onAuthStateChange((event, session) => {
+      const next = session?.user?.id;
+      if (cloudUserId && (event === "SIGNED_OUT" || (next && next !== cloudUserId))) {
+        resetCloudSession();
+        syncStatus("ログインしてください。");
+      }
+    });
+    el("syncLogin").addEventListener("click", async () => {
+      const email = el("syncEmail").value.trim();
+      const password = el("syncPassword").value;
+      if (!email || !password) {
+        syncStatus("メールアドレスとパスワードを入力してください。");
+        return;
+      }
+      try {
+        await runCloud(async () => {
+          syncStatus("ログインしています…");
+          const data = checkedResult(await cloudClient.auth.signInWithPassword({email, password}));
+          resetCloudSession(data.user.id);
+          el("syncPassword").value = "";
+          await refreshCloud();
+        });
+      } catch (error) {
+        if (cloudUserId) syncFailed(error);
+        else syncStatus("ログインできませんでした。メールアドレス・パスワード・接続先を確認してください。");
+      }
+    });
+    el("syncRefresh").addEventListener("click", async () => {
+      if (hasOpenEditor()) {
+        syncStatus("編集中の項目を保存するかキャンセルしてから同期してください。");
+        return;
+      }
+      try {
+        await runCloud(refreshCloud);
+      } catch (error) {
+        syncFailed(error);
+      }
+    });
+    el("syncLogout").addEventListener("click", async () => {
+      try {
+        await runCloud(async () => {
+          checkedResult(await cloudClient.auth.signOut({scope:"local"}));
+          resetCloudSession();
+          syncStatus("ログアウトしました。");
+        });
+      } catch {
+        syncStatus("ログアウトできませんでした。");
+      }
+    });
+    el("syncImport").addEventListener("click", async () => {
+      if (hasOpenEditor()) {
+        syncStatus("編集中の項目を保存するかキャンセルしてから取り込んでください。");
+        return;
+      }
+      try {
+        await runCloud(importLocalData);
+      } catch (error) {
+        syncFailed(error);
+      }
+    });
+
+    try {
+      await runCloud(async () => {
+        const {session} = checkedResult(await cloudClient.auth.getSession());
+        if (!session) return;
+        resetCloudSession(session.user.id);
+        await refreshCloud();
+      });
+    } catch (error) {
+      syncFailed(error);
+    }
+  };
+
+  const importLocalData = async () => {
+    const userId = cloudUserId;
+    if (!cloudReady || temporaryStorage) return;
+    syncStatus("この端末のデータを確認しています…");
+    const categoryItems = readCategories(localStorageSource);
+    const localTasks = readTasks(localStorageSource);
+    const timelineItems = readTimeline(localStorageSource);
+    const memos = await localMemoAccess("getAll");
+    el("memoStorageNotice").hidden = true;
+    if (!categoryItems || !localTasks || !timelineItems) {
+      syncStatus("ブラウザに保存されたデータを読み込めませんでした。取り込みは行っていません。");
+      return;
+    }
+
+    const groups = [
+      ["category", categoryItems.filter(item =>
+        !defaultCategories.some(original => item.id === original.id && item.name === original.name))],
+      ["task", localTasks],
+      ["timeline", timelineItems],
+      ["memo", memos]
+    ];
+    let imported = 0;
+    let skipped = 0;
+    let failed = 0;
+    for (const [kind, items] of groups) {
+      for (const item of items) {
+        assertCloudUser(userId);
+        if (item.id === undefined || item.id === null) {
+          failed++;
+          continue;
+        }
+        const id = String(item.id);
+        if (cloudRows.get(kind).has(id)) {
+          skipped++;
+          continue;
+        }
+        try {
+          const payload = kind === "memo" ? await encodeCloudMemo(item, userId) : item;
+          if (await writeCloudRow(kind, id, payload, userId, true)) imported++;
+          else skipped++;
+        } catch {
+          failed++;
+        }
+      }
+    }
+    const summary = `取り込み ${imported}件 / 登録済み・削除済み ${skipped}件 / 失敗 ${failed}件。`;
+    try {
+      await refreshCloud();
+      syncStatus(summary + (failed ? " 失敗した項目はこの端末から再試行できます。" : ""));
+    } catch {
+      syncStatus(summary + " 一覧の更新に失敗しました。「同期」を押してください。");
+    }
+  };
+
+  if (syncConfigured) initializeCloud();
+  else {
+    renderCategoryControls();
+    showView("all");
+  }
   if (!loadedTasks) taskStatus("保存済みのタスクを読み込めませんでした。");
   if (temporaryStorage) {
     el("storageNotice").textContent =
