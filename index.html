@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Task Dashboard</title>
+<title>Task Dashboard v13</title>
 <style>
   :root{
     --bg:#f6f7f8;
@@ -27,68 +27,398 @@
   }
   button,input,select,textarea{font:inherit}
 
-  .app{min-height:100vh;display:flex}
-
-  .sidebar{
-    width:194px;
-    flex:0 0 194px;
-    background:#eef0f2;
-    border-right:1px solid var(--line);
-    padding:22px 14px;
-    position:sticky;
-    top:0;
-    height:100vh;
-  }
-
-  .brand{
-    margin:0 0 18px;
-    font-size:22px;
-    font-weight:800;
-  }
-
-  .nav{display:flex;flex-direction:column;gap:6px}
-  .nav button{
-    border:0;
-    background:transparent;
-    color:#333;
-    text-align:left;
-    padding:12px 13px;
-    border-radius:10px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .nav button.active{
-    background:#dfe7f2;
-    font-weight:700;
-    color:#17395f;
-  }
+  .app{min-height:100vh;display:block}
 
   .main{
-    flex:1;
+    width:100%;
     min-width:0;
     display:flex;
     flex-direction:column;
     min-height:100vh;
   }
 
-  .header{
-    height:68px;
+  .dashboard-view:not([hidden]){
+    display:flex;
+    flex:1;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  .memo-page{
+    width:100%;
+    max-width:1100px;
+    margin:0 auto;
+    padding:20px 24px 40px;
+  }
+
+  .memo-editor,.memo-note{
+    padding:14px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+  }
+  .memo-editor{min-width:0;margin:0;scroll-margin-top:76px}
+  .memo-editor legend{padding:0 5px;color:#17395f;font-weight:bold}
+  .memo-editor label{display:block;margin-bottom:6px;font-size:13px;font-weight:bold}
+  .memo-editor textarea{
+    width:100%;
+    min-width:0;
+    padding:8px 10px;
+    border:1px solid #cfd8e3;
+    border-radius:8px;
     background:#fff;
-    border-bottom:1px solid var(--line);
-    padding:0 28px;
+    color:inherit;
+    resize:vertical;
+  }
+  #memoBody{min-height:105px}
+
+  .memo-actions,.memo-note-header{
     display:flex;
     align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .memo-editor .memo-actions{margin-top:10px}
+  .memo-note-header{justify-content:space-between}
+  .memo-note-header time{color:var(--muted);font-size:13px}
+  .memo-hint,.memo-status,.memo-empty{color:var(--muted);font-size:13px}
+  .memo-status:empty{display:none}
+  .memo-storage-notice{margin:0 0 12px}
+
+  .memo-list,.memo-images{
+    display:grid;
+    gap:10px;
+  }
+  .memo-list{margin-top:14px}
+  .memo-images{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+  .memo-images:not(:empty){margin-top:10px}
+  .memo-attachment{
+    min-width:0;
+    margin:0;
+    padding:8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel-soft);
+  }
+  .memo-attachment textarea{min-height:58px}
+  .memo-image-open{
+    display:block;
+    width:100%;
+    margin:0 0 8px;
+    padding:0;
+    border:0;
+    background:none;
+    cursor:zoom-in;
+  }
+  .memo-image-open img{
+    display:block;
+    max-width:100%;
+    max-height:220px;
+    margin:auto;
+    object-fit:contain;
+  }
+  .memo-text,.memo-caption{
+    margin:10px 0 0;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+    line-height:1.55;
+  }
+
+  .memo-viewer{
+    width:max-content;
+    max-width:calc(100% - 24px);
+    max-height:calc(100% - 24px);
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:12px;
+  }
+  .memo-viewer img{
+    display:block;
+    max-width:100%;
+    max-height:75vh;
+    margin:10px auto 0;
+    object-fit:contain;
+  }
+
+  .top-header{
+    min-height:64px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:0 24px;
+    display:flex;
+    align-items:center;
+    gap:10px;
     position:sticky;
     top:0;
-    z-index:20;
+    z-index:30;
   }
-  .header h1{
-    margin:0;
+
+  .dashboard-brand{
+    border:0;
+    background:transparent;
+    padding:10px 18px 10px 0;
+    color:#132f50;
     font-size:22px;
+    font-weight:800;
+    cursor:pointer;
+    white-space:nowrap;
+    border-right:1px solid var(--line);
+    margin-right:2px;
+  }
+  .dashboard-brand.active{color:#0f4f8d}
+
+  .top-nav{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    min-width:0;
+    overflow-x:auto;
+  }
+  .top-nav button{
+    border:0;
+    background:transparent;
+    color:#4b5560;
+    min-height:40px;
+    padding:9px 16px;
+    border-radius:9px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .top-nav button:hover{background:#f1f4f7}
+  .top-nav button.active{color:#17395f;background:#dfe7f2}
+
+  .timeline-area{
+    padding:14px 24px 10px;
+    background:#fff;
+  }
+
+  .timeline-card{
+    min-width:0;
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--panel-soft);
+  }
+
+  .timeline-head,.timeline-actions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .timeline-head{
+    flex-wrap:wrap;
+    justify-content:space-between;
+  }
+
+  .timeline-title{
+    margin:0;
     color:#17395f;
+    font-size:16px;
+  }
+
+  .timeline-form{
+    margin:10px 0;
+    padding:10px 0;
+    border-block:1px solid var(--line);
+  }
+
+  .timeline-fields{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 145px 155px 120px;
+    align-items:end;
+    gap:8px;
+  }
+
+  .timeline-form-footer{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:end;
+    gap:8px;
+    margin-top:8px;
+  }
+
+  .timeline-status{
+    color:#46576a;
+    font-size:12px;
+  }
+  .task-feedback{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .task-feedback:has(.timeline-status:empty){display:none}
+  .storage-notice{
+    margin:8px 24px 0;
+    padding:8px 10px;
+    border-radius:8px;
+    background:#fff3d9;
+    color:#654400;
+    font-size:13px;
+  }
+  .delete-dialog{
+    width:min(340px,calc(100% - 24px));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    color:var(--text);
+  }
+  .delete-dialog-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .content{scroll-margin-top:72px}
+
+  .timeline-nav{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-top:10px;
+    padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+  .timeline-nav[hidden]{display:none}
+  .timeline-nav .btn{padding:4px 8px;font-size:12px}
+  .timeline-nav .btn:disabled{color:var(--muted);cursor:default}
+
+  .timeline-strip{
+    --day-width:156px;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--day-width)),1fr));
+    row-gap:12px;
+  }
+
+  .timeline-empty{
+    margin:12px 0 2px;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  .timeline-day{
+    min-width:0;
+    position:relative;
+    padding:9px 8px 4px;
+    scroll-margin-top:72px;
+  }
+
+  .timeline-axis{
+    position:relative;
+    height:2px;
+    margin:9px -8px 12px;
+    background:#a9bcd4;
+  }
+
+  .timeline-axis::before{
+    content:"";
+    position:absolute;
+    top:50%;
+    left:16px;
+    width:8px;
+    height:8px;
+    transform:translate(-50%,-50%);
+    border:2px solid #fafafa;
+    border-radius:50%;
+    background:#3973ac;
+    box-shadow:0 0 0 1px #3973ac;
+  }
+  .past .timeline-axis::before{background:#68798d;box-shadow:0 0 0 1px #68798d}
+  .today .timeline-axis::before{
+    width:12px;
+    height:12px;
+    background:#135da6;
+    box-shadow:0 0 0 2px #135da6;
+  }
+
+  .timeline-day-heading{
+    display:flex;
+    align-items:center;
+    gap:4px 6px;
+    min-height:32px;
+    margin:0;
+    color:#17395f;
+    font-size:12px;
+    line-height:1.2;
+    font-variant-numeric:tabular-nums;
+    overflow-wrap:anywhere;
+  }
+
+  .timeline-countdown{
+    padding:2px 6px;
+    border-radius:5px;
+    background:var(--accent-soft);
+    color:#17395f;
+  }
+  .past .timeline-countdown{background:#eef0f2;color:#4d5d6d}
+  .today .timeline-countdown{background:#135da6;color:#fff}
+  .soon .timeline-countdown{background:#fff1cf;color:#774600}
+
+  .timeline-day-events{
+    display:grid;
+    align-content:start;
+    gap:5px;
+  }
+
+  .timeline-entry{
+    min-width:0;
+    padding:7px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+    scroll-margin-top:72px;
+  }
+
+  .timeline-time{
+    color:var(--muted);
+    font-size:11px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .timeline-entry-meta{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:4px;
+  }
+
+  .timeline-genre{
+    display:inline-block;
+    padding:2px 6px;
+    border-radius:5px;
+    color:#17395f;
+    background:var(--accent-soft);
+    font-size:11px;
+    font-weight:700;
+  }
+
+  .timeline-entry-title{
+    display:block;
+    margin-top:4px;
+    font-size:13px;
+    overflow-wrap:anywhere;
+  }
+
+  .timeline-memo{
+    margin:4px 0 0;
+    color:#4b5560;
+    font-size:12px;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+  }
+
+  .timeline-entry .timeline-actions{flex-wrap:wrap;margin-top:6px}
+  .timeline-actions .btn{padding:4px 7px;font-size:12px}
+  .create-area{scroll-margin-top:72px}
+  .timeline-area{scroll-margin-top:72px}
+
+  .current-filter{
+    color:#17395f;
+    font-size:18px;
+    font-weight:800;
+    margin:0 0 12px;
   }
 
   /* タスク追加：横幅いっぱい・3行以内 */
@@ -313,6 +643,46 @@
     margin:0 0 14px;
   }
 
+  .task-lanes{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .task-lane{
+    min-width:0;
+    padding:10px;
+    border:1px solid var(--line);
+    border-top:3px solid var(--accent);
+    border-radius:12px;
+    background:#eef2f6;
+  }
+  .task-lane[data-genre="MTG"]{border-top-color:#7456a5}
+  .task-lane[data-genre="スキルアップ"]{border-top-color:#387b63}
+  .task-lane[data-genre="私用"]{border-top-color:#a85b30}
+
+  .task-lane-heading{
+    margin:0 0 10px;
+    color:#17395f;
+    font-size:15px;
+  }
+  .task-lane .task-row:last-child{margin-bottom:0}
+  .task-lane .task-row{gap:6px}
+  .task-lane .task-check{margin-top:11px}
+  .task-lane .task-summary{padding:9px;gap:6px}
+  .task-lane .task-name{font-size:14px;white-space:normal}
+  .task-lane .task-genre{display:none}
+  .task-lane .task-name,.task-lane .task-meta,.task-lane .memo{overflow-wrap:anywhere}
+
+  .task-list-empty{
+    margin:0;
+    padding:14px 4px;
+    color:var(--muted);
+    text-align:center;
+    font-size:13px;
+  }
+  .other-tasks{margin-top:18px}
+
   .task-row{
     display:flex;
     align-items:flex-start;
@@ -456,27 +826,43 @@
   }
 
   @media (max-width:900px){
-    .sidebar{width:160px;flex-basis:160px}
     .recurring-grid{grid-template-columns:1fr}
     .recurring-card{max-height:280px}
     .mini-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .task-lanes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
+  @media (max-width:540px){
+    .task-lanes{grid-template-columns:minmax(0,1fr)}
   }
 
   @media (max-width:700px){
-    .sidebar{
-      width:70px;
-      flex-basis:70px;
-      padding:16px 8px;
+    .top-header{
+      padding:7px 12px;
+      gap:6px;
+      align-items:flex-start;
+      flex-direction:column;
     }
-    .brand{
-      font-size:0;
-      text-align:center;
+    .dashboard-brand{
+      width:100%;
+      text-align:left;
+      border-right:0;
+      border-bottom:1px solid var(--line);
+      padding:7px 4px 10px;
+      font-size:19px;
     }
-    .brand::after{content:"📋";font-size:24px}
-    .nav button .nav-label,.nav button .nav-count{display:none}
-    .nav button{justify-content:center}
-    .header{padding-inline:14px}
+    .top-nav{width:100%;padding-bottom:2px}
+    .top-nav button{padding:8px 12px;font-size:14px}
     .create-area,.recurring-area,.toolbar,.content{padding-left:12px;padding-right:12px}
+    .memo-page{padding-inline:12px}
+    .memo-editor{scroll-margin-top:112px}
+    .create-area,.timeline-area,.content{scroll-margin-top:112px}
+    .timeline-area{padding-inline:12px}
+    .timeline-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .timeline-fields .name-field,.timeline-fields .timeline-genre-field{grid-column:1/-1}
+    .timeline-form-footer{grid-template-columns:1fr}
+    .timeline-strip{--day-width:140px}
+    .timeline-day,.timeline-entry{scroll-margin-top:112px}
     .create-row-1{grid-template-columns:1fr 1fr}
     .create-row-1 .name-field{grid-column:1/-1}
     .mini-grid{grid-template-columns:1fr}
@@ -485,17 +871,72 @@
 </head>
 <body>
 <div class="app">
-  <aside class="sidebar">
-    <div class="brand">📋 Tasks</div>
-    <nav class="nav" id="nav"></nav>
-  </aside>
-
   <main class="main">
-    <header class="header">
-      <h1 id="heading">📥 すべて</h1>
+    <header class="top-header">
+      <button class="dashboard-brand" id="dashboardHome" type="button"
+              aria-label="Task Dashboard すべてのタスク">Task Dashboard</button>
+      <nav class="top-nav" id="nav" aria-label="メインナビゲーション"></nav>
     </header>
 
-    <section class="create-area">
+    <p class="storage-notice" id="storageNotice" role="status">操作できない場合は、HTMLをダウンロードしてChromeで開くか、公開済みのGitHub Pagesから開いてください。</p>
+
+    <div class="dashboard-view" id="dashboardView">
+    <section class="timeline-area" id="timelineArea" aria-labelledby="timelineHeading">
+      <div class="timeline-card">
+        <div class="timeline-head">
+          <h2 class="timeline-title" id="timelineHeading">タイムライン</h2>
+          <button class="btn primary" id="timelineOpen" type="button"
+                  aria-controls="timelineForm" aria-expanded="false">＋ タイムラインに登録</button>
+        </div>
+        <div class="timeline-form" id="timelineForm" role="group" aria-label="タイムラインの入力" hidden>
+          <div class="timeline-fields">
+            <div class="field name-field">
+              <label class="label" for="timelineTitle">タイトル</label>
+              <input class="control" id="timelineTitle" required placeholder="例：大会に参加">
+            </div>
+            <div class="field timeline-genre-field">
+              <label class="label" for="timelineGenre">ジャンル</label>
+              <select class="control" id="timelineGenre" required>
+                <option>仕事</option>
+                <option>MTG</option>
+                <option>スキルアップ</option>
+                <option>私用</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="timelineDate">日付</label>
+              <input class="control" id="timelineDate" type="date" required>
+            </div>
+            <div class="field">
+              <label class="label" for="timelineTime">時刻（任意）</label>
+              <input class="control" id="timelineTime" type="time">
+            </div>
+          </div>
+          <div class="timeline-form-footer">
+            <div class="field">
+              <label class="label" for="timelineMemo">メモ（任意）</label>
+              <textarea class="control" id="timelineMemo"></textarea>
+            </div>
+            <div class="timeline-actions">
+              <button class="btn primary" id="timelineSave" type="button">登録</button>
+              <button class="btn cancel" id="timelineCancel" type="button">キャンセル</button>
+            </div>
+          </div>
+        </div>
+        <div class="task-feedback">
+          <div class="timeline-status" id="timelineStatus" role="status"></div>
+          <button class="btn" id="openTimelineGenre" type="button" hidden></button>
+        </div>
+        <div class="timeline-nav" id="timelineNav" aria-label="表示する日付" hidden>
+          <button class="btn" id="timelinePrevious" type="button">← 過去の予定</button>
+          <button class="btn" id="timelineToday" type="button">今日へ</button>
+          <button class="btn" id="timelineNext" type="button">次の予定 →</button>
+        </div>
+        <div id="timelineList"></div>
+      </div>
+    </section>
+
+    <section class="create-area" id="createArea">
       <div class="create-card">
         <div class="create-head compact-head">
           <span id="editBadge" class="edit-badge" hidden>編集中</span>
@@ -546,6 +987,10 @@
             <button id="cancel" class="btn cancel" hidden>キャンセル</button>
           </div>
         </div>
+        <div class="task-feedback">
+          <div class="timeline-status" id="taskStatus" role="status"></div>
+          <button class="btn" id="openTaskList" type="button" hidden>タスク一覧へ</button>
+        </div>
       </div>
     </section>
 
@@ -592,51 +1037,108 @@
       </label>
     </section>
 
-    <section class="content">
-      <h2 class="list-title" id="listTitle">📥 すべて</h2>
+    <section class="content" id="taskContent" aria-labelledby="listTitle" tabindex="-1">
+      <h2 class="current-filter" id="listTitle">すべてのタスク</h2>
       <div id="items"></div>
+    </section>
+    </div>
+
+    <section class="memo-page" id="memoPage" aria-labelledby="memoHeading" hidden>
+      <h2 class="current-filter" id="memoHeading">メモ</h2>
+      <p class="storage-notice memo-storage-notice" id="memoStorageNotice" hidden>
+        この画面ではメモを一時保存します。画面を閉じたり再読み込みしたりすると消えます。
+      </p>
+      <fieldset class="memo-editor" id="memoEditor">
+        <legend id="memoEditorTitle">新しいメモ</legend>
+        <label for="memoBody">本文</label>
+        <textarea id="memoBody" rows="4" aria-describedby="memoPasteHint"></textarea>
+        <p class="memo-hint" id="memoPasteHint">スクショは本文欄に Ctrl+V（Macは ⌘V）で貼り付けられます。</p>
+        <input id="memoFiles" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/avif" multiple hidden>
+        <div class="memo-actions">
+          <button class="btn" id="memoPickFiles" type="button">画像を追加</button>
+        </div>
+        <div class="memo-images" id="memoDraftImages"></div>
+        <div class="memo-actions">
+          <button class="btn primary" id="memoSave" type="button">メモを保存</button>
+          <button class="btn" id="memoCancel" type="button">入力をクリア</button>
+        </div>
+      </fieldset>
+      <p class="memo-status" id="memoStatus" role="status"></p>
+      <div class="memo-list" id="memoList" aria-label="保存したメモ"></div>
     </section>
   </main>
 </div>
 
+<dialog class="delete-dialog" id="deleteDialog" aria-labelledby="deleteMessage">
+  <p id="deleteMessage"></p>
+  <div class="delete-dialog-actions">
+    <button class="btn" id="deleteCancel" type="button" autofocus>キャンセル</button>
+    <button class="btn" id="deleteConfirm" type="button">削除</button>
+  </div>
+</dialog>
+
+<dialog class="memo-viewer" id="memoViewer" aria-label="スクリーンショットの拡大表示">
+  <button class="btn" id="memoCloseViewer" type="button" autofocus>閉じる</button>
+  <img id="memoViewerImage" alt="">
+</dialog>
+
 <script>
 (() => {
   const STORAGE_KEY = "simple_tasks_v2";
+  const TIMELINE_STORAGE_KEY = "task_dashboard_timeline_v1";
 
-  let tasks = [];
+  let storage;
+  let temporaryStorage = false;
   try {
-    tasks = JSON.parse(
-      localStorage.getItem(STORAGE_KEY) ||
-      localStorage.getItem("simple_tasks_v1") ||
-      "[]"
-    );
-  } catch (e) {
-    tasks = [];
+    storage = window.localStorage;
+    storage.getItem(STORAGE_KEY);
+  } catch {
+    temporaryStorage = true;
+    const temporaryData = new Map();
+    storage = {
+      getItem: key => temporaryData.get(key) ?? null,
+      setItem: (key, value) => temporaryData.set(key, value)
+    };
   }
 
-  if (!Array.isArray(tasks)) tasks = [];
+  const readTasks = () => {
+    try {
+      const saved = JSON.parse(storage.getItem(STORAGE_KEY) ??
+        storage.getItem("simple_tasks_v1") ?? "[]");
+      if (!Array.isArray(saved) || !saved.every(task =>
+        task && typeof task === "object" && !Array.isArray(task)
+      )) return null;
 
-  // 旧データを新仕様に自動移行
-  tasks = tasks.map(task => ({
-    ...task,
-    g: task.g || "未分類",
-    m: task.m || "",
-    repeat: task.repeat || (task.daily ? "daily" : "none"),
-    daily: undefined
-  }));
+      // 旧データを新仕様に自動移行
+      return saved.map(({daily, ...task}) => ({
+        ...task,
+        g: task.g || "未分類",
+        m: task.m || "",
+        repeat: task.repeat || (daily ? "daily" : "none")
+      }));
+    } catch {
+      return null;
+    }
+  };
+  const loadedTasks = readTasks();
+  let tasks = loadedTasks ?? [];
 
   let selectedGenre = "all";
+  let activeView = "all";
   let sortMode = "priority";
   let showDone = false;
   let editingId = null;
+  let editingTimelineId = null;
 
-  const genres = {
-    all: "📥 すべて",
-    仕事: "💼 仕事",
-    MTG: "🃏 MTG",
-    スキルアップ: "📚 スキルアップ",
-    私用: "🏠 私用"
+  const genreIcons = {
+    仕事: "💼",
+    MTG: "🃏",
+    スキルアップ: "📚",
+    私用: "🏠"
   };
+  const categoryNames = Object.keys(genreIcons);
+  const defaultGenre = () => selectedGenre === "all" ? categoryNames[0] : selectedGenre;
+  const matchesGenre = genre => selectedGenre === "all" || genre === selectedGenre;
 
   const repeatLabels = {
     none: "通常",
@@ -648,7 +1150,12 @@
   const priorityRank = { 高: 0, 中: 1, 低: 2 };
   const el = id => document.getElementById(id);
 
-  const today = () => new Date().toLocaleDateString("sv-SE");
+  const localDate = date => [
+    String(date.getFullYear()).padStart(4, "0"),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+  const today = () => localDate(new Date());
 
   const weekKey = () => {
     const d = new Date();
@@ -656,7 +1163,7 @@
     const day = d.getDay();
     const diff = day === 0 ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
-    return "W:" + d.toLocaleDateString("sv-SE");
+    return "W:" + localDate(d);
   };
 
   const monthKey = () => {
@@ -671,9 +1178,42 @@
     return "";
   };
 
-  const saveTasks = () => {
-    const cleaned = tasks.map(({daily, ...task}) => task);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+  const taskStatus = (message, listView = "") => {
+    el("taskStatus").textContent = message;
+    const button = el("openTaskList");
+    button.hidden = !listView;
+    button.dataset.viewTarget = listView;
+  };
+
+  const saveTasks = updated => {
+    try {
+      storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      tasks = updated;
+      return true;
+    } catch {
+      taskStatus("タスクを保存できませんでした。ブラウザの保存設定や空き容量を確認してください。");
+      el("taskStatus").scrollIntoView({block:"nearest"});
+      return false;
+    }
+  };
+
+  const tasksForChange = () => {
+    const current = readTasks();
+    if (!current) {
+      taskStatus("保存済みのタスクを読み込めませんでした。既存データは上書きしていません。");
+      el("taskStatus").scrollIntoView({block:"nearest"});
+    }
+    return current;
+  };
+
+  const confirmDelete = message => {
+    const dialog = el("deleteDialog");
+    el("deleteMessage").textContent = message;
+    dialog.returnValue = "";
+    dialog.showModal();
+    return new Promise(resolve => {
+      dialog.addEventListener("close", () => resolve(dialog.returnValue === "delete"), {once:true});
+    });
   };
 
   const escapeHtml = value =>
@@ -684,6 +1224,166 @@
       '"': "&quot;",
       "'": "&#39;"
     })[char]);
+
+  const readTimeline = () => {
+    try {
+      const entries = JSON.parse(storage.getItem(TIMELINE_STORAGE_KEY) ?? "[]");
+      const valid = Array.isArray(entries) && entries.every(entry =>
+        entry && ["id", "title", "genre", "date", "time", "memo"].every(
+          field => typeof entry[field] === "string"
+        ) && Number.isFinite(entry.createdAt)
+      );
+      return valid ? entries : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const saveTimeline = entries => {
+    try {
+      storage.setItem(TIMELINE_STORAGE_KEY, JSON.stringify(entries));
+      return true;
+    } catch {
+      timelineStatus("タイムラインを保存できませんでした。ブラウザの保存設定や空き容量を確認してください。");
+      el("timelineStatus").scrollIntoView({block:"nearest"});
+      return false;
+    }
+  };
+
+  const timelineStatus = (message, genre = "", date = "") => {
+    el("timelineStatus").textContent = message;
+    const button = el("openTimelineGenre");
+    button.hidden = !genre;
+    button.dataset.genre = genre;
+    button.dataset.date = date;
+    button.textContent = genre ? genre + "のタイムラインを開く" : "";
+  };
+
+  const setTimelineFormVisible = visible => {
+    el("timelineForm").hidden = !visible;
+    el("timelineOpen").hidden = visible;
+    el("timelineOpen").setAttribute("aria-expanded", String(visible));
+  };
+
+  const openTimelineForm = (entry = null) => {
+    editingTimelineId = entry?.id ?? null;
+    el("timelineTitle").value = entry?.title ?? "";
+    el("timelineGenre").value = entry?.genre ?? defaultGenre();
+    el("timelineDate").value = entry?.date ?? today();
+    el("timelineTime").value = entry?.time ?? "";
+    el("timelineMemo").value = entry?.memo ?? "";
+    el("timelineSave").textContent = entry ? "更新" : "登録";
+    timelineStatus("");
+    setTimelineFormVisible(true);
+    el("timelineArea").scrollIntoView({block:"start"});
+    el("timelineTitle").focus({preventScroll:true});
+  };
+
+  const closeTimelineForm = () => {
+    editingTimelineId = null;
+    setTimelineFormVisible(false);
+  };
+
+  const calendarDay = date => {
+    const [year, month, day] = date.split("-").map(Number);
+    const utcDate = new Date(0);
+    utcDate.setUTCFullYear(year, month - 1, day);
+    return utcDate.getTime() / 86400000;
+  };
+
+  const countdown = days => {
+    if (days === 0) return "今日";
+    return days > 0 ? `あと${days}日` : `${-days}日前`;
+  };
+
+  const timelineDayId = date => "timeline-day-" + date;
+
+  const goToTimelineDate = date => {
+    const day = document.getElementById(timelineDayId(date));
+    if (!day) return;
+    day.scrollIntoView({block:"start"});
+    day.focus({preventScroll:true});
+  };
+
+  const timelineEntryCard = entry => {
+    const id = escapeHtml(entry.id);
+    return `<article class="timeline-entry">
+      <div class="timeline-entry-meta">
+        <span class="timeline-genre">${escapeHtml(entry.genre)}</span>
+        ${entry.time ? `<time class="timeline-time">${escapeHtml(entry.time)}</time>` : ""}
+      </div>
+      <strong class="timeline-entry-title">${escapeHtml(entry.title)}</strong>
+      ${entry.memo ? `<p class="timeline-memo">${escapeHtml(entry.memo)}</p>` : ""}
+      <div class="timeline-actions">
+        <button class="btn" type="button" data-timeline-edit="${id}">編集</button>
+        <button class="btn" type="button" data-timeline-delete="${id}">削除</button>
+      </div>
+    </article>`;
+  };
+
+  let timelineRenderedOn = "";
+
+  const renderTimeline = () => {
+    el("timelineHeading").textContent = selectedGenre === "all"
+      ? "タイムライン"
+      : selectedGenre + "のタイムライン";
+
+    const currentDate = today();
+    timelineRenderedOn = currentDate;
+    const list = el("timelineList");
+    const entries = readTimeline();
+    if (!entries) {
+      el("timelineNav").hidden = true;
+      list.innerHTML = '<p class="timeline-empty">タイムラインを読み込めませんでした。</p>';
+      return;
+    }
+
+    const visible = entries
+      .filter(entry => matchesGenre(entry.genre))
+      .sort((a, b) => a.time.localeCompare(b.time) || a.createdAt - b.createdAt);
+    const groups = new Map([[currentDate, []]]);
+    for (const entry of visible) {
+      if (!groups.has(entry.date)) groups.set(entry.date, []);
+      groups.get(entry.date).push(entry);
+    }
+
+    const currentDay = calendarDay(currentDate);
+    const days = Array.from(groups, ([date, dayEntries]) => ({
+      date,
+      entries: dayEntries,
+      offset: calendarDay(date) - currentDay
+    })).sort((a, b) => a.offset - b.offset);
+
+    const todayIndex = days.findIndex(day => day.date === currentDate);
+    const previous = days[todayIndex - 1];
+    const next = days[todayIndex + 1];
+    el("timelineNav").hidden = !visible.length;
+    el("timelinePrevious").disabled = !previous;
+    el("timelinePrevious").dataset.date = previous?.date ?? "";
+    el("timelineToday").dataset.date = currentDate;
+    el("timelineNext").disabled = !next;
+    el("timelineNext").dataset.date = next?.date ?? "";
+    el("timelineNext").textContent = next ? `次の予定 · ${countdown(next.offset)} →` : "次の予定 →";
+
+    const currentYear = Number(currentDate.split("-")[0]);
+    const strip = days.map(({date, entries: dayEntries, offset}) => {
+      const [year, month, day] = date.split("-").map(Number);
+      const dateLabel = year === currentYear
+        ? `${month}/${day}` : `${year}/${month}/${day}`;
+      const state = offset === 0 ? "today" : offset < 0 ? "past" : offset <= 3 ? "soon" : "";
+      const id = escapeHtml(timelineDayId(date));
+      return `<section class="timeline-day ${state}" id="${id}" aria-labelledby="${id}-heading" tabindex="-1">
+        <h3 class="timeline-day-heading" id="${id}-heading">
+          <time datetime="${escapeHtml(date)}">${dateLabel}</time>
+          <span class="timeline-countdown">${countdown(offset)}</span>
+        </h3>
+        <div class="timeline-axis" aria-hidden="true"></div>
+        <div class="timeline-day-events">${dayEntries.map(timelineEntryCard).join("")}</div>
+      </section>`;
+    }).join("");
+    const empty = visible.length ? "" : '<p class="timeline-empty">登録された予定・記録はありません。</p>';
+    list.innerHTML = `<div class="timeline-strip">${strip}</div>${empty}`;
+  };
 
   const effectiveDone = task => {
     if (task.repeat && task.repeat !== "none") {
@@ -705,9 +1405,10 @@
   };
 
   const resetForm = () => {
+    taskStatus("");
     editingId = null;
     el("name").value = "";
-    el("genre").value = "仕事";
+    el("genre").value = defaultGenre();
     el("date").value = "";
     el("priority").value = "中";
     el("memo").value = "";
@@ -725,9 +1426,10 @@
   };
 
   const startEdit = task => {
+    taskStatus("");
     editingId = task.id;
     el("name").value = task.n || "";
-    el("genre").value = genres[task.g] ? task.g : "仕事";
+    el("genre").value = categoryNames.includes(task.g) ? task.g : defaultGenre();
     el("date").value = task.d || "";
     el("priority").value = task.p || "中";
     el("memo").value = task.m || "";
@@ -744,9 +1446,9 @@
         "🗓️ マンスリーとして更新";
     });
 
-    el("name").focus();
+    el("createArea").scrollIntoView({block:"start"});
+    el("name").focus({preventScroll:true});
     el("name").select();
-    window.scrollTo({top:0, behavior:"smooth"});
   };
 
   const taskCard = (task, compact = false) => {
@@ -768,14 +1470,14 @@
 
     const meta = compact
       ? `${icon} ${escapeHtml(task.p)} ${task.m ? "📝" : ""}`
-      : `${escapeHtml(task.g)}　${icon} ${escapeHtml(task.p)}　${task.d ? "📅 " + escapeHtml(task.d) : ""} ${task.m ? "📝" : ""} ${repeatIcon} ${overdue ? "🚨期限切れ" : ""}`;
+      : `<span class="task-genre">${escapeHtml(task.g)}　</span>${icon} ${escapeHtml(task.p)}　${task.d ? "📅 " + escapeHtml(task.d) : ""} ${task.m ? "📝" : ""} ${repeatIcon} ${overdue ? "🚨期限切れ" : ""}`;
 
     return `
       <div class="task-row">
         <input
           class="task-check"
           type="checkbox"
-          data-complete="${task.id}"
+          data-complete="${escapeHtml(task.id)}"
           title="完了"
           ${isDone ? "checked" : ""}
         >
@@ -796,8 +1498,8 @@
               ${task.m ? escapeHtml(task.m) : "メモなし"}
             </div>
             <div class="task-buttons">
-              <button class="btn" data-edit="${task.id}">✏️ 編集</button>
-              <button class="btn" data-delete="${task.id}">🗑️ 削除</button>
+              <button class="btn" type="button" data-edit="${escapeHtml(task.id)}">✏️ 編集</button>
+              <button class="btn" type="button" data-delete="${escapeHtml(task.id)}">🗑️ 削除</button>
             </div>
           </div>
         </details>
@@ -808,18 +1510,27 @@
   const bindTaskEvents = () => {
     document.querySelectorAll("[data-complete]").forEach(input => {
       input.addEventListener("change", () => {
-        const task = tasks.find(
+        const current = tasksForChange();
+        const task = current?.find(
           item => String(item.id) === input.dataset.complete
         );
-        if (!task) return;
-
-        if (task.repeat && task.repeat !== "none") {
-          task.lastDone = input.checked ? periodKey(task.repeat) : "";
-        } else {
-          task.done = input.checked;
+        if (!task) {
+          input.checked = !input.checked;
+          if (current) {
+            tasks = current;
+            render();
+          }
+          return;
         }
 
-        saveTasks();
+        const checked = input.checked;
+        const change = task.repeat === "none"
+          ? {done: checked}
+          : {lastDone: checked ? periodKey(task.repeat) : ""};
+        if (!saveTasks(current.map(item => item === task ? {...task, ...change} : item))) {
+          input.checked = effectiveDone(task);
+          return;
+        }
         render();
       });
     });
@@ -835,52 +1546,28 @@
     });
 
     document.querySelectorAll("[data-delete]").forEach(button => {
-      button.addEventListener("click", event => {
+      button.addEventListener("click", async event => {
         event.preventDefault();
         const id = button.dataset.delete;
-        if (!confirm("このタスクを削除しますか？")) return;
-
-        tasks = tasks.filter(item => String(item.id) !== id);
+        if (!await confirmDelete("このタスクを削除しますか？")) return;
+        const current = tasksForChange();
+        if (!current || !saveTasks(current.filter(item => String(item.id) !== id))) return;
         if (String(editingId) === id) resetForm();
-
-        saveTasks();
+        taskStatus("タスクを削除しました。");
         render();
       });
     });
   };
 
   const renderNav = () => {
-    const nav = el("nav");
-
-    const incomplete = tasks.filter(
-      task => task.repeat === "none" && !effectiveDone(task)
-    );
-
-    nav.innerHTML = Object.entries(genres)
-      .map(([key, label]) => {
-        const count =
-          key === "all"
-            ? incomplete.length
-            : incomplete.filter(task => task.g === key).length;
-
-        return `
-          <button
-            type="button"
-            data-genre="${key}"
-            class="${selectedGenre === key ? "active" : ""}"
-          >
-            <span class="nav-label">${label}</span>
-            <span class="nav-count">${count || ""}</span>
-          </button>
-        `;
-      })
-      .join("");
-
-    nav.querySelectorAll("[data-genre]").forEach(button => {
-      button.addEventListener("click", () => {
-        selectedGenre = button.dataset.genre;
-        render();
-      });
+    document.querySelectorAll("[data-view]").forEach(button => {
+      const active = button.dataset.view === activeView;
+      button.classList.toggle("active", active);
+      if (active) {
+        button.setAttribute("aria-current", "page");
+      } else {
+        button.removeAttribute("aria-current");
+      }
     });
   };
 
@@ -900,28 +1587,37 @@
         : `<div class="empty">${titleText}はまだありません</div>`;
   };
 
+  const taskRows = list => list.length
+    ? list.map(task => taskCard(task)).join("")
+    : '<p class="task-list-empty">タスクなし</p>';
+
   const renderNormalTasks = () => {
     const visible = tasks
-      .filter(task => {
-        if (task.repeat !== "none") return false;
-
-        const genreMatch =
-          selectedGenre === "all" || task.g === selectedGenre;
-
-        const doneMatch =
-          showDone || !effectiveDone(task);
-
-        return genreMatch && doneMatch;
-      })
+      .filter(task => task.repeat === "none" && matchesGenre(task.g) &&
+        (showDone || !effectiveDone(task)))
       .sort(compareTasks);
 
-    el("heading").textContent = genres[selectedGenre];
-    el("listTitle").textContent = genres[selectedGenre];
+    el("listTitle").textContent =
+      selectedGenre === "all" ? "すべてのタスク" : selectedGenre + "のタスク";
 
-    el("items").innerHTML =
-      visible.length
-        ? visible.map(task => taskCard(task)).join("")
-        : `<div style="color:#999;padding:40px 10px;text-align:center">タスクなし</div>`;
+    if (selectedGenre !== "all") {
+      el("items").innerHTML = taskRows(visible);
+      return;
+    }
+
+    const lanes = categoryNames.map((genre, index) => `
+      <section class="task-lane" data-genre="${genre}" aria-labelledby="task-lane-heading-${index}">
+        <h3 class="task-lane-heading" id="task-lane-heading-${index}">
+          <span aria-hidden="true">${genreIcons[genre]}</span> ${genre}
+        </h3>
+        ${taskRows(visible.filter(task => task.g === genre))}
+      </section>`).join("");
+    const other = visible.filter(task => !categoryNames.includes(task.g));
+    const otherSection = other.length ? `<section class="other-tasks" aria-labelledby="other-tasks-heading">
+      <h3 class="task-lane-heading" id="other-tasks-heading">その他のタスク</h3>
+      ${taskRows(other)}
+    </section>` : "";
+    el("items").innerHTML = `<div class="task-lanes">${lanes}</div>${otherSection}`;
   };
 
   const render = () => {
@@ -933,48 +1629,75 @@
     bindTaskEvents();
   };
 
+  const showView = (view, focusDate = "") => {
+    activeView = view;
+    const isMemoView = view === "memos";
+    el("dashboardView").hidden = isMemoView;
+    el("memoPage").hidden = !isMemoView;
+    window.scrollTo(0, 0);
+    if (isMemoView) {
+      renderNav();
+      el("memoBody").focus({preventScroll:true});
+      refreshMemos();
+      return;
+    }
+    if (selectedGenre !== view) {
+      selectedGenre = view;
+      closeTimelineForm();
+      timelineStatus("");
+      taskStatus("");
+      if (editingId === null) el("genre").value = defaultGenre();
+    }
+    renderTimeline();
+    render();
+    if (focusDate) goToTimelineDate(focusDate);
+  };
+
   const saveWithType = repeatType => {
     const name = el("name").value.trim();
     if (!name) {
+      taskStatus("タスク名を入力してください。");
       el("name").focus();
       return;
     }
 
-    let task =
-      editingId === null
-        ? null
-        : tasks.find(item => String(item.id) === String(editingId));
-
-    const previousRepeat = task ? task.repeat : "none";
-
-    if (!task) {
-      task = {
-        id: Date.now() + "-" + Math.random().toString(36).slice(2),
-        done: false,
-        lastDone: ""
-      };
-      tasks.push(task);
+    const current = tasksForChange();
+    if (!current) return;
+    const previous = editingId === null ? null
+      : current.find(item => String(item.id) === String(editingId));
+    if (editingId !== null && !previous) {
+      taskStatus("このタスクは別のタブで削除されています。");
+      return;
     }
 
-    Object.assign(task, {
+    const task = {
+      ...previous,
+      id: previous?.id ?? (Date.now() + "-" + Math.random().toString(36).slice(2)),
       n: name,
       g: el("genre").value,
       d: el("date").value,
       p: el("priority").value,
       m: el("memo").value.trim(),
       repeat: repeatType
-    });
+    };
 
     // 通常↔反復、または反復種別変更時は完了状態をリセット
-    if (previousRepeat !== repeatType) {
+    if (previous?.repeat !== repeatType) {
       task.done = false;
       task.lastDone = "";
     }
 
-    saveTasks();
+    const updated = previous
+      ? current.map(item => item === previous ? task : item)
+      : [...current, task];
+    if (!saveTasks(updated)) return;
     resetForm();
     render();
-    el("name").focus();
+    const action = previous ? "更新" : "追加";
+    const listView = matchesGenre(task.g) ? selectedGenre : task.g;
+    taskStatus(`「${name}」を${task.g}の${repeatLabels[repeatType]}タスクに${action}しました。`,
+      repeatType === "none" ? listView : "");
+    el("name").focus({preventScroll:true});
   };
 
   document.querySelectorAll("[data-save-type]").forEach(button => {
@@ -984,8 +1707,15 @@
   });
 
   el("cancel").addEventListener("click", resetForm);
+  el("openTaskList").addEventListener("click", event => {
+    const view = event.currentTarget.dataset.viewTarget;
+    if (view !== selectedGenre) showView(view);
+    el("taskContent").scrollIntoView({block:"start"});
+    el("taskContent").focus({preventScroll:true});
+  });
 
   el("name").addEventListener("keydown", event => {
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.key === "Enter") {
       if (editingId !== null) {
         const current = tasks.find(
@@ -1013,10 +1743,10 @@
   });
 
   const resetRepeatGroup = type => {
-    tasks.forEach(task => {
-      if (task.repeat === type) task.lastDone = "";
-    });
-    saveTasks();
+    const current = tasksForChange();
+    if (!current) return;
+    const reset = current.map(task => task.repeat === type ? {...task, lastDone:""} : task);
+    if (!saveTasks(reset)) return;
     render();
   };
 
@@ -1024,7 +1754,428 @@
   el("resetWeekly").addEventListener("click", () => resetRepeatGroup("weekly"));
   el("resetMonthly").addEventListener("click", () => resetRepeatGroup("monthly"));
 
-  render();
+  el("dashboardHome").dataset.view = "all";
+  el("nav").innerHTML = categoryNames.map(genre => `
+    <button type="button" data-view="${genre}">${genreIcons[genre]} ${genre}</button>
+  `).join("") + '<button type="button" data-view="memos">📝 メモ</button>';
+  document.querySelectorAll("[data-view]").forEach(button => {
+    button.addEventListener("click", () => showView(button.dataset.view));
+  });
+
+  el("timelineOpen").addEventListener("click", () => openTimelineForm());
+  ["timelinePrevious", "timelineToday", "timelineNext"].forEach(id => {
+    const button = el(id);
+    button.addEventListener("click", () => goToTimelineDate(button.dataset.date));
+  });
+  el("openTimelineGenre").addEventListener("click", event => {
+    const {genre, date} = event.currentTarget.dataset;
+    showView(genre, date);
+  });
+  el("timelineCancel").addEventListener("click", () => {
+    closeTimelineForm();
+    timelineStatus("");
+    el("timelineOpen").focus();
+  });
+  const saveTimelineEntry = () => {
+    const titleInput = el("timelineTitle");
+    const title = titleInput.value.trim();
+    if (!title) {
+      timelineStatus("タイトルを入力してください。");
+      titleInput.focus();
+      return;
+    }
+    const dateInput = el("timelineDate");
+    if (!dateInput.value || !dateInput.validity.valid) {
+      timelineStatus("日付を正しく入力してください。");
+      dateInput.focus();
+      return;
+    }
+    const timeInput = el("timelineTime");
+    if (!timeInput.validity.valid) {
+      timelineStatus("時刻を正しく入力するか、空欄にしてください。");
+      timeInput.focus();
+      return;
+    }
+
+    const entries = readTimeline();
+    if (!entries) {
+      timelineStatus("保存済みのタイムラインを読み込めませんでした。既存データは上書きしていません。");
+      return;
+    }
+    const previous = entries.find(entry => entry.id === editingTimelineId);
+    if (editingTimelineId !== null && !previous) {
+      timelineStatus("この項目は削除されています。");
+      return;
+    }
+
+    const entry = {
+      id: previous?.id ?? (Date.now() + "-" + Math.random().toString(36).slice(2)),
+      createdAt: previous?.createdAt ?? Date.now(),
+      title,
+      genre: el("timelineGenre").value,
+      date: dateInput.value,
+      time: timeInput.value,
+      memo: el("timelineMemo").value.trim()
+    };
+    const updated = previous
+      ? entries.map(item => item.id === entry.id ? entry : item)
+      : [...entries, entry];
+    if (!saveTimeline(updated)) return;
+
+    closeTimelineForm();
+    const action = previous ? "更新" : "登録";
+    const outsideTimeline = !matchesGenre(entry.genre);
+    timelineStatus(`「${title}」を${entry.genre}のタイムラインに${action}しました。`,
+      outsideTimeline ? entry.genre : "", entry.date);
+    renderTimeline();
+    const list = el("timelineList");
+    const savedButton = Array.from(list.querySelectorAll("[data-timeline-edit]"))
+      .find(button => button.dataset.timelineEdit === entry.id);
+    if (savedButton) {
+      savedButton.closest(".timeline-entry").scrollIntoView({block:"nearest"});
+      savedButton.focus({preventScroll:true});
+    } else {
+      el("timelineOpen").focus({preventScroll:true});
+    }
+  };
+
+  // プレビューでフォーム送信が制限される環境でも、クリックから直接保存する。
+  el("timelineSave").addEventListener("click", saveTimelineEntry);
+  el("timelineTitle").addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    saveTimelineEntry();
+  });
+  el("deleteCancel").addEventListener("click", () => el("deleteDialog").close("cancel"));
+  el("deleteConfirm").addEventListener("click", () => el("deleteDialog").close("delete"));
+
+  el("timelineList").addEventListener("click", async event => {
+    const button = event.target.closest("[data-timeline-edit], [data-timeline-delete]");
+    if (!button) return;
+    const id = button.dataset.timelineEdit ?? button.dataset.timelineDelete;
+    if (button.dataset.timelineDelete &&
+        !await confirmDelete("この予定・記録を削除しますか？")) return;
+
+    const entries = readTimeline();
+    const entry = entries?.find(item => item.id === id);
+    if (!entry) {
+      renderTimeline();
+      return;
+    }
+    if (button.dataset.timelineEdit) {
+      openTimelineForm(entry);
+      return;
+    }
+    if (!saveTimeline(entries.filter(item => item.id !== id))) return;
+    if (editingTimelineId === id) closeTimelineForm();
+    renderTimeline();
+    timelineStatus("予定・記録を削除しました。");
+    el("timelineForm").hidden ? el("timelineOpen").focus() : el("timelineTitle").focus();
+  });
+
+  window.addEventListener("storage", event => {
+    if (event.key === TIMELINE_STORAGE_KEY || event.key === null) {
+      renderTimeline();
+    }
+    if (event.key === STORAGE_KEY || event.key === "simple_tasks_v1" || event.key === null) {
+      const current = readTasks();
+      if (current) {
+        tasks = current;
+        render();
+      } else {
+        taskStatus("保存済みのタスクを読み込めませんでした。");
+      }
+    }
+  });
+  setInterval(() => {
+    if (timelineRenderedOn !== today()) renderTimeline();
+  }, 60000);
+
+  const MEMO_DB_NAME = "task_dashboard_memos";
+  const MEMO_STORE_NAME = "memos";
+  const memoImageType = /^image\/(png|jpeg|webp|gif|bmp|avif)$/i;
+  const temporaryMemos = new Map();
+  let memoDatabasePromise;
+  let savedMemos = [];
+  let memoEditId = null;
+  let draftImages = [];
+  let memoBusy = false;
+  const draftImageUrls = [];
+  const savedImageUrls = [];
+  const memoDateFormat = new Intl.DateTimeFormat("ja-JP", {
+    dateStyle:"medium",
+    timeStyle:"short"
+  });
+
+  const openMemoDatabase = () => new Promise((resolve, reject) => {
+    const onOpenError = error => {
+      if (error?.name === "SecurityError" || error?.name === "NotAllowedError") {
+        resolve(null);
+      } else {
+        reject(error);
+      }
+    };
+
+    let request;
+    try {
+      if (!window.indexedDB) {
+        resolve(null);
+        return;
+      }
+      request = window.indexedDB.open(MEMO_DB_NAME, 1);
+    } catch (error) {
+      onOpenError(error);
+      return;
+    }
+
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(MEMO_STORE_NAME, {keyPath:"id"});
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => {
+        db.close();
+        memoDatabasePromise = undefined;
+      };
+      resolve(db);
+    };
+    request.onerror = () => onOpenError(request.error);
+  });
+
+  const memoAccess = async (action, value) => {
+    memoDatabasePromise ??= openMemoDatabase().catch(error => {
+      memoDatabasePromise = undefined;
+      throw error;
+    });
+    const db = await memoDatabasePromise;
+    el("memoStorageNotice").hidden = Boolean(db);
+    if (!db) {
+      if (action === "getAll") return Array.from(temporaryMemos.values());
+      if (action === "put") temporaryMemos.set(value.id, value);
+      if (action === "delete") temporaryMemos.delete(value);
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const mode = action === "getAll" ? "readonly" : "readwrite";
+      const tx = db.transaction(MEMO_STORE_NAME, mode);
+      const store = tx.objectStore(MEMO_STORE_NAME);
+      const request = action === "getAll" ? store.getAll() : store[action](value);
+      tx.oncomplete = () => resolve(request.result);
+      tx.onabort = () => reject(tx.error ?? new Error("Memo transaction aborted"));
+    });
+  };
+
+  const memoStatus = message => {
+    el("memoStatus").textContent = message;
+  };
+
+  const releaseMemoImageUrls = urls => {
+    urls.forEach(url => URL.revokeObjectURL(url));
+    urls.length = 0;
+  };
+
+  const memoImageMarkup = (blob, index, urls) => {
+    const url = URL.createObjectURL(blob);
+    urls.push(url);
+    return `<button class="memo-image-open" type="button" data-memo-image
+        aria-label="画像${index + 1}を拡大">
+      <img src="${escapeHtml(url)}" alt="画像${index + 1}" loading="lazy" decoding="async">
+    </button>`;
+  };
+
+  const renderMemoDraft = () => {
+    releaseMemoImageUrls(draftImageUrls);
+    el("memoDraftImages").innerHTML = draftImages.map(({blob, caption}, index) => `
+      <figure class="memo-attachment">
+        ${memoImageMarkup(blob, index, draftImageUrls)}
+        <label for="memoCaption-${index}">画像${index + 1}のメモ</label>
+        <textarea id="memoCaption-${index}" rows="2" data-memo-caption="${index}">\n${escapeHtml(caption)}</textarea>
+        <button class="btn" type="button" data-memo-remove="${index}">画像を外す</button>
+      </figure>`).join("");
+  };
+
+  const renderMemoList = () => {
+    releaseMemoImageUrls(savedImageUrls);
+    el("memoList").innerHTML = savedMemos.length ? savedMemos.slice()
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map(memo => {
+        const id = escapeHtml(memo.id);
+        return `<article class="memo-note">
+          <div class="memo-note-header">
+            <time datetime="${new Date(memo.updatedAt).toISOString()}">${memoDateFormat.format(memo.updatedAt)}</time>
+            <div class="memo-actions">
+              <button class="btn" type="button" data-memo-edit="${id}">編集</button>
+              <button class="btn" type="button" data-memo-delete="${id}">削除</button>
+            </div>
+          </div>
+          ${memo.body ? `<p class="memo-text">${escapeHtml(memo.body)}</p>` : ""}
+          ${memo.images.length ? `<div class="memo-images">${memo.images.map(({blob, caption}, index) => `
+            <figure class="memo-attachment">
+              ${memoImageMarkup(blob, index, savedImageUrls)}
+              ${caption ? `<figcaption class="memo-caption">${escapeHtml(caption)}</figcaption>` : ""}
+            </figure>`).join("")}</div>` : ""}
+        </article>`;
+      }).join("") : '<p class="memo-empty">保存したメモはありません。</p>';
+  };
+
+  const refreshMemos = async () => {
+    if (memoBusy) return;
+    try {
+      savedMemos = await memoAccess("getAll");
+      renderMemoList();
+    } catch {
+      memoStatus("メモを読み込めませんでした。");
+    }
+  };
+
+  const setMemoDraft = (memo = null) => {
+    memoEditId = memo?.id ?? null;
+    el("memoBody").value = memo?.body ?? "";
+    draftImages = memo ? memo.images.map(image => ({...image})) : [];
+    el("memoEditorTitle").textContent = memo ? "メモを編集中" : "新しいメモ";
+    el("memoSave").textContent = memo ? "変更を保存" : "メモを保存";
+    el("memoCancel").textContent = memo ? "編集をキャンセル" : "入力をクリア";
+    renderMemoDraft();
+  };
+
+  const setMemoBusy = busy => {
+    memoBusy = busy;
+    el("memoEditor").disabled = busy;
+  };
+
+  const attachMemoImages = files => {
+    if (memoBusy || !files.length) return;
+    const supported = files.filter(file => memoImageType.test(file.type));
+    draftImages.push(...supported.map(blob => ({blob, caption:""})));
+    if (supported.length) renderMemoDraft();
+    memoStatus(supported.length === files.length
+      ? `画像を${supported.length}枚追加しました。`
+      : "PNG、JPEG、WebP、GIF、BMP、AVIFの画像を追加できます。");
+  };
+
+  el("memoPage").addEventListener("paste", event => {
+    const clipboard = event.clipboardData;
+    if (!clipboard || memoBusy) return;
+    const images = Array.from(clipboard.items ?? [])
+      .filter(item => item.kind === "file" && item.type.startsWith("image/"))
+      .map(item => item.getAsFile())
+      .filter(Boolean);
+    const files = images.length ? images : Array.from(clipboard.files ?? [])
+      .filter(file => file.type.startsWith("image/"));
+    if (!files.length) return;
+    event.preventDefault();
+    attachMemoImages(files);
+  });
+
+  el("memoPickFiles").addEventListener("click", () => el("memoFiles").click());
+  el("memoFiles").addEventListener("change", event => {
+    attachMemoImages(Array.from(event.target.files));
+    event.target.value = "";
+  });
+
+  el("memoDraftImages").addEventListener("input", event => {
+    const index = event.target.dataset.memoCaption;
+    if (index !== undefined) draftImages[index].caption = event.target.value;
+  });
+  el("memoDraftImages").addEventListener("click", event => {
+    const button = event.target.closest("[data-memo-remove]");
+    if (!button || memoBusy) return;
+    draftImages.splice(Number(button.dataset.memoRemove), 1);
+    renderMemoDraft();
+    memoStatus("画像を外しました。");
+    el("memoPickFiles").focus({preventScroll:true});
+  });
+
+  el("memoPage").addEventListener("click", event => {
+    const button = event.target.closest("[data-memo-image]");
+    if (!button) return;
+    const image = button.querySelector("img");
+    const viewerImage = el("memoViewerImage");
+    viewerImage.src = image.src;
+    viewerImage.alt = image.alt;
+    el("memoViewer").showModal();
+  });
+  el("memoCloseViewer").addEventListener("click", () => el("memoViewer").close());
+  el("memoViewer").addEventListener("close", () => el("memoViewerImage").removeAttribute("src"));
+
+  el("memoCancel").addEventListener("click", () => {
+    setMemoDraft();
+    memoStatus("");
+    el("memoBody").focus({preventScroll:true});
+  });
+
+  el("memoSave").addEventListener("click", async () => {
+    if (memoBusy) return;
+    const body = el("memoBody").value;
+    if (!body.trim() && !draftImages.length) {
+      memoStatus("本文を入力するか、画像を追加してください。");
+      el("memoBody").focus({preventScroll:true});
+      return;
+    }
+
+    const memo = {
+      id: memoEditId ?? (Date.now() + "-" + Math.random().toString(36).slice(2)),
+      body,
+      images:draftImages.map(image => ({...image})),
+      updatedAt:Date.now()
+    };
+    setMemoBusy(true);
+    try {
+      await memoAccess("put", memo);
+      savedMemos = [memo, ...savedMemos.filter(item => item.id !== memo.id)];
+      renderMemoList();
+      setMemoDraft();
+      memoStatus("メモを保存しました。");
+    } catch {
+      memoStatus("メモを保存できませんでした。入力内容を確認して再試行してください。");
+    } finally {
+      setMemoBusy(false);
+    }
+  });
+
+  el("memoList").addEventListener("click", async event => {
+    const button = event.target.closest("[data-memo-edit], [data-memo-delete]");
+    if (!button || memoBusy) return;
+    const id = button.dataset.memoEdit ?? button.dataset.memoDelete;
+    const memo = savedMemos.find(item => item.id === id);
+    if (!memo) return;
+
+    if (button.dataset.memoEdit) {
+      if (memoEditId !== id && (el("memoBody").value || draftImages.length)) {
+        memoStatus("入力中のメモを保存するか、クリアしてください。");
+      } else if (memoEditId !== id) {
+        setMemoDraft(memo);
+        memoStatus("");
+      }
+      el("memoEditor").scrollIntoView({block:"start"});
+      el("memoBody").focus({preventScroll:true});
+      return;
+    }
+
+    if (!await confirmDelete("このメモと添付画像を削除しますか？")) return;
+    setMemoBusy(true);
+    try {
+      await memoAccess("delete", id);
+      savedMemos = savedMemos.filter(item => item.id !== id);
+      renderMemoList();
+      if (memoEditId === id) setMemoDraft();
+      memoStatus("メモを削除しました。");
+    } catch {
+      memoStatus("メモを削除できませんでした。");
+    } finally {
+      setMemoBusy(false);
+    }
+  });
+
+  showView("all");
+  if (!loadedTasks) taskStatus("保存済みのタスクを読み込めませんでした。");
+  if (temporaryStorage) {
+    el("storageNotice").textContent =
+      "この画面では入力内容を一時的に保持します。保存して使うには、HTMLをダウンロードしてChromeで開くか、公開済みのGitHub Pagesから開いてください。";
+  } else {
+    el("storageNotice").hidden = true;
+  }
 })();
 </script>
 </body>
